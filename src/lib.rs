@@ -39,6 +39,9 @@ pub enum Version {
 
     /// Version 5, SHA-1 name based.
     Sha1,
+
+    /// Special case for the nil UUID.
+    Nil,
 }
 
 /// Universally Unique Identifier, or UUID.
@@ -80,6 +83,7 @@ impl Uuid {
         let b = u16::from_be_bytes(self.0[6..=7].try_into().unwrap());
         let bits = &b.bits::<Msb0>()[..4];
         match (bits[0], bits[1], bits[2], bits[3]) {
+            (false, false, false, false) => Version::Nil,
             (false, false, false, true) => Version::Time,
             (false, false, true, false) => Version::Dce,
             (false, false, true, true) => Version::Md5,
