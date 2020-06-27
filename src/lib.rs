@@ -80,8 +80,7 @@ impl Uuid {
     }
 
     pub fn version(self) -> Version {
-        let b = u16::from_be_bytes(self.0[6..=7].try_into().unwrap());
-        let bits = &b.bits::<Msb0>()[..4];
+        let bits = &self.0[6].bits::<Msb0>()[..4];
         match (bits[0], bits[1], bits[2], bits[3]) {
             (false, false, false, false) => Version::Nil,
             (false, false, false, true) => Version::Time,
