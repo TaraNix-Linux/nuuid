@@ -53,17 +53,17 @@ pub struct Uuid(Bytes);
 
 impl Uuid {
     /// The special Nil UUID, where all bits are set to zero.
-    pub fn nil() -> Self {
-        Uuid(Bytes::default())
+    pub const fn nil() -> Self {
+        Uuid([0; 16])
     }
 
     /// Create a UUID from bytes.
-    pub fn from_bytes(bytes: Bytes) -> Self {
+    pub const fn from_bytes(bytes: Bytes) -> Self {
         Self(bytes)
     }
 
     /// Return the UUID as it's bytes.
-    pub fn to_bytes(self) -> Bytes {
+    pub const fn to_bytes(self) -> Bytes {
         self.0
     }
 
