@@ -1,6 +1,7 @@
 //! Create and use UUID's
 // #![cfg_attr(not(test), no_std)]
 use bitvec::prelude::*;
+use core::convert::TryInto;
 
 /// A 16 byte with the UUID.
 pub type Bytes = [u8; 16];
@@ -76,7 +77,16 @@ impl Uuid {
     }
 
     pub fn version(self) -> Version {
-        todo!()
+        let b = u16::from_be_bytes(self.0[6..=7].try_into().unwrap());
+        let bits = &b.bits::<Msb0>()[..4];
+        match (bits[0], bits[1], bits[2], bits[3]) {
+            (false, false, false, true) => Version::Time,
+            (false, false, true, false) => Version::Dce,
+            (false, false, true, true) => Version::Md5,
+            (false, true, false, false) => Version::Random,
+            (false, true, false, true) => Version::Sha1,
+            _ => panic!("Invalid version"),
+        }
     }
 }
 
@@ -94,6 +104,7 @@ mod tests {
         let uuid = Uuid::from_bytes(RAW);
         // dbg!(uuid);
         dbg!(uuid.variant());
+        dbg!(uuid.version());
         assert_eq!(uuid.version(), Version::Random);
         todo!("test")
     }
