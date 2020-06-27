@@ -1,5 +1,6 @@
 //! Create and use UUID's
 // #![cfg_attr(not(test), no_std)]
+use bitvec::prelude::*;
 
 /// A 16 byte with the UUID.
 pub type Bytes = [u8; 16];
@@ -65,22 +66,13 @@ impl Uuid {
     }
 
     pub fn variant(self) -> Variant {
-        let b = self.0[8];
-        match b {
-            // MSB0 0
-            x if x & (1 << 7) == 0 => Variant::Ncs,
-            // MSB0 1 MSB1 0
-            x if x & ((1 << 7) | !(1 << 6)) != 0 => Variant::Ncs,
-            _ => panic!(),
+        let bits = &self.0[8].bits::<Msb0>()[..3];
+        match (bits[0], bits[1], bits[2]) {
+            (true, true, true) => Variant::Reserved,
+            (true, true, false) => Variant::Microsoft,
+            (true, false, ..) => Variant::Rfc4122,
+            (false, ..) => Variant::Ncs,
         }
-        // // b.tole
-        // dbg!(b);
-        // dbg!(b << 0);
-        // dbg!(b << 7);
-        // dbg!(b << 6);
-        // dbg!((b << 5));
-        // dbg!((b << 5).to_be());
-        // todo!()
     }
 
     pub fn version(self) -> Version {
