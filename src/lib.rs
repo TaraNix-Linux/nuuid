@@ -53,22 +53,27 @@ pub enum Version {
 pub struct Uuid(Bytes);
 
 impl Uuid {
+    /// The special Nil UUID, where all bits are set to zero.
     pub fn nil() -> Self {
         Uuid(Bytes::default())
     }
 
+    /// Create a UUID from bytes.
     pub fn from_bytes(bytes: Bytes) -> Self {
         Self(bytes)
     }
 
+    /// Return the UUID as it's bytes.
     pub fn to_bytes(self) -> Bytes {
         self.0
     }
 
+    /// Returns true if the UUID is nil.
     pub fn is_nil(self) -> bool {
         self.0 == Self::nil().0
     }
 
+    /// The UUID Variant
     pub fn variant(self) -> Variant {
         let bits = &self.0[8].bits::<Msb0>()[..3];
         match (bits[0], bits[1], bits[2]) {
@@ -79,6 +84,11 @@ impl Uuid {
         }
     }
 
+    /// The UUID Variant
+    ///
+    /// # Panics
+    ///
+    /// - If the version is invalid
     pub fn version(self) -> Version {
         let bits = &self.0[6].bits::<Msb0>()[..4];
         match (bits[0], bits[1], bits[2], bits[3]) {
