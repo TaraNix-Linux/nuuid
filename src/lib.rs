@@ -69,6 +69,31 @@ impl Uuid {
         self.0
     }
 
+    /// Create a UUID from mixed-endian bytes.
+    ///
+    /// # Note
+    ///
+    /// This is primarily for compatibility with legacy version 2 UUID's,
+    /// which use a mixed-endian format where the
+    /// first three fields are little-endian.
+    pub fn from_bytes_me(mut bytes: Bytes) -> Self {
+        bytes[0..4].reverse();
+        bytes[4..6].reverse();
+        bytes[6..8].reverse();
+        Self(bytes)
+    }
+
+    /// Return the UUID as mixed-endian bytes.
+    ///
+    /// See [`Uuid::from_bytes_le`] for details.
+    pub fn to_bytes_me(self) -> Bytes {
+        let mut bytes = self.to_bytes();
+        bytes[0..4].reverse();
+        bytes[4..6].reverse();
+        bytes[6..8].reverse();
+        bytes
+    }
+
     /// Returns true if the UUID is nil.
     pub fn is_nil(self) -> bool {
         self.0 == Self::nil().0
@@ -112,6 +137,17 @@ mod tests {
     const RAW: [u8; 16] = [
         102, 42, 167, 199, 117, 152, 77, 86, 139, 204, 167, 44, 48, 249, 152, 162,
     ];
+
+    #[test]
+    fn endian() {
+        let uuid_be = Uuid::from_bytes(RAW);
+        assert_eq!(uuid_be.version(), Version::Random);
+        assert_eq!(uuid_be.variant(), Variant::Rfc4122);
+
+        let uuid_le = Uuid::from_bytes_me(uuid_be.to_bytes_me());
+        assert_eq!(uuid_le.version(), Version::Random);
+        assert_eq!(uuid_le.variant(), Variant::Rfc4122);
+    }
 
     #[test]
     fn info() {
