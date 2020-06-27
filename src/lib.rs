@@ -1,10 +1,40 @@
 //! Create and use UUID's
-// #![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(test), no_std)]
 use bitvec::prelude::*;
-use core::str::FromStr;
+use core::{
+    convert::TryInto,
+    fmt::{Error, Result as FmtResult, Write},
+    str::FromStr,
+};
 
 /// A 16 byte with the UUID.
 pub type Bytes = [u8; 16];
+
+struct BytesWrapper<'a> {
+    bytes: &'a mut [u8],
+    offset: usize,
+}
+
+impl<'a> BytesWrapper<'a> {
+    fn new(bytes: &'a mut [u8]) -> Self {
+        Self { bytes, offset: 0 }
+    }
+
+    fn into_inner(self) -> &'a mut [u8] {
+        self.bytes
+    }
+}
+
+impl<'a> Write for BytesWrapper<'a> {
+    fn write_str(&mut self, s: &str) -> FmtResult {
+        if (self.bytes.len() - self.offset) < s.len() {
+            return Err(Error);
+        }
+        self.bytes[self.offset..][..s.len()].copy_from_slice(s.as_bytes());
+        self.offset += s.len();
+        Ok(())
+    }
+}
 
 /// UUID Variants
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
@@ -132,6 +162,28 @@ impl Uuid {
             _ => panic!("Invalid version"),
         }
     }
+
+    /// Write UUID as a string into `buf`, and returns it as a string.
+    pub fn to_string(self, buf: &mut [u8; 36]) -> &str {
+        let bytes = self.to_bytes();
+        let time_low = u32::from_be_bytes(bytes[..4].try_into().unwrap());
+        let time_mid = u16::from_be_bytes(bytes[4..6].try_into().unwrap());
+        let time_hi_and_version = u16::from_be_bytes(bytes[6..8].try_into().unwrap());
+        let clock_seq_hi_and_reserved = u8::from_be_bytes(bytes[8..9].try_into().unwrap());
+        let clock_seq_low = u8::from_be_bytes(bytes[9..10].try_into().unwrap());
+        let mut node = [0; 8];
+        // Leading zeros, and last 48 bits/6 bytes
+        node[2..].copy_from_slice(&bytes[10..16]);
+        let node = u64::from_be_bytes(node);
+        let mut buf = BytesWrapper::new(&mut buf[..]);
+        write!(
+            buf,
+            "{:x}-{:x}-{:x}-{:x}{:x}-{:x}",
+            time_low, time_mid, time_hi_and_version, clock_seq_hi_and_reserved, clock_seq_low, node
+        )
+        .expect("BUG: Couldn't write UUID");
+        core::str::from_utf8(buf.into_inner()).expect("BUG: Invalid UTF")
+    }
 }
 
 impl FromStr for Uuid {
@@ -146,10 +198,19 @@ impl FromStr for Uuid {
 mod tests {
     use super::*;
 
-    const _UUID_V4: &str = "662aa7c7-7598-4d56-8bcc-a72c30f998a2";
+    const UUID_V4: &str = "662aa7c7-7598-4d56-8bcc-a72c30f998a2";
     const RAW: [u8; 16] = [
         102, 42, 167, 199, 117, 152, 77, 86, 139, 204, 167, 44, 48, 249, 152, 162,
     ];
+
+    #[test]
+    fn string() {
+        let uuid = Uuid::from_bytes(RAW);
+        let mut buf = [0; 36];
+        let s = uuid.to_string(&mut buf);
+        println!("UUID: `{}`", s);
+        assert_eq!(s, UUID_V4, "UUID strings didn't match");
+    }
 
     #[test]
     fn endian() {
