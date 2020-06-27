@@ -47,6 +47,8 @@ pub enum Version {
 ///
 /// This type is `repr(transparent)` and guaranteed to have the same layout
 /// as `[u8; 16]`.
+///
+/// UUID fields **always** laid out MSB, or big-endian.
 #[derive(Debug, Copy, Clone)]
 #[repr(transparent)]
 pub struct Uuid(Bytes);
