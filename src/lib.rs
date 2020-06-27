@@ -62,7 +62,7 @@ impl Uuid {
         self.0
     }
 
-    pub fn is_nill(self) -> bool {
+    pub fn is_nil(self) -> bool {
         self.0 == Self::nil().0
     }
 
