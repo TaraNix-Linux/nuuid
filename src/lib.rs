@@ -6,6 +6,7 @@ use core::{
     fmt::{Error, Result as FmtResult, Write},
     str::FromStr,
 };
+// use rand::prelude::*;
 
 const UUID_STR_LENGTH: usize = 36;
 const UUID_URN_LENGTH: usize = 45;
@@ -163,7 +164,7 @@ impl Uuid {
             (false, false, true, true) => Version::Md5,
             (false, true, false, false) => Version::Random,
             (false, true, false, true) => Version::Sha1,
-            _ => panic!("Invalid version"),
+            v => panic!("Invalid version: {:?}", v),
         }
     }
 
@@ -216,7 +217,16 @@ impl Uuid {
 impl Uuid {
     /// Create a new Version 4(Random) UUID.
     pub fn new_v4() -> Self {
-        todo!()
+        let mut uuid = Uuid::from_bytes(rand::random::<u128>().to_ne_bytes());
+        // Variant
+        let variant = uuid.0[8].bits_mut::<Msb0>();
+        variant[..2].set_all(false);
+        variant.set(0, true);
+        // Version
+        let version = uuid.0[6].bits_mut::<Msb0>();
+        version[..4].set_all(false);
+        version.set(1, true);
+        uuid
     }
 }
 

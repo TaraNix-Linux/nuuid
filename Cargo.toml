@@ -8,3 +8,8 @@ edition = "2018"
 version = "0.17.4"
 default-features = false
 features = []
+
+[dependencies.rand]
+version = "0.7.3"
+# default-features = false
+features = []
