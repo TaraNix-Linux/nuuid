@@ -163,8 +163,13 @@ impl Uuid {
         }
     }
 
-    /// Write UUID as a string into `buf`, and returns it as a string.
-    pub fn to_string(self, buf: &mut [u8; 36]) -> &str {
+    /// Write UUID as the ASCII string into `buf`, and returns it as a string.
+    ///
+    /// # Panics
+    ///
+    /// If `buf.len()` is not >= 36
+    pub fn to_string(self, buf: &mut [u8]) -> &str {
+        assert!(buf.len() >= 36, "Buf too small for UUID");
         let bytes = self.to_bytes();
         let time_low = u32::from_be_bytes(bytes[..4].try_into().unwrap());
         let time_mid = u16::from_be_bytes(bytes[4..6].try_into().unwrap());
@@ -182,7 +187,19 @@ impl Uuid {
             time_low, time_mid, time_hi_and_version, clock_seq_hi_and_reserved, clock_seq_low, node
         )
         .expect("BUG: Couldn't write UUID");
-        core::str::from_utf8(buf.into_inner()).expect("BUG: Invalid UTF")
+        core::str::from_utf8(buf.into_inner()).expect("BUG: Invalid UTF8")
+    }
+
+    /// Write a UUID as a ASCII string into `buf`, and return it as a string.
+    ///
+    /// # Panics
+    ///
+    /// If `buf.len()` is not >= 45
+    pub fn to_urn(self, buf: &mut [u8]) -> &str {
+        assert!(buf.len() >= 45, "Buf too small for UUID");
+        buf[..9].copy_from_slice(b"urn:uuid:");
+        self.to_string(&mut buf[9..]);
+        core::str::from_utf8(buf).expect("BUG: Invalid UTF8")
     }
 }
 
@@ -199,6 +216,7 @@ mod tests {
     use super::*;
 
     const UUID_V4: &str = "662aa7c7-7598-4d56-8bcc-a72c30f998a2";
+    const UUID_V4_URN: &str = "urn:uuid:662aa7c7-7598-4d56-8bcc-a72c30f998a2";
     const RAW: [u8; 16] = [
         102, 42, 167, 199, 117, 152, 77, 86, 139, 204, 167, 44, 48, 249, 152, 162,
     ];
@@ -206,10 +224,12 @@ mod tests {
     #[test]
     fn string() {
         let uuid = Uuid::from_bytes(RAW);
-        let mut buf = [0; 36];
+        let mut buf = [0; 45];
         let s = uuid.to_string(&mut buf);
         println!("UUID: `{}`", s);
-        assert_eq!(s, UUID_V4, "UUID strings didn't match");
+        assert_eq!(&s[..36], UUID_V4, "UUID strings didn't match");
+        let s = uuid.to_urn(&mut buf);
+        assert_eq!(s, UUID_V4_URN, "UUID URN strings didn't match");
     }
 
     #[test]
