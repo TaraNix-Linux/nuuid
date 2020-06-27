@@ -213,6 +213,13 @@ impl Uuid {
     }
 }
 
+impl Uuid {
+    /// Create a new Version 4(Random) UUID.
+    pub fn new_v4() -> Self {
+        todo!()
+    }
+}
+
 impl FromStr for Uuid {
     type Err = ParseUuidError;
 
@@ -300,6 +307,9 @@ mod tests {
     #[test]
     fn info() {
         let uuid = Uuid::from_bytes(RAW);
+        assert_eq!(uuid.version(), Version::Random);
+        assert_eq!(uuid.variant(), Variant::Rfc4122);
+        let uuid = Uuid::new_v4();
         assert_eq!(uuid.version(), Version::Random);
         assert_eq!(uuid.variant(), Variant::Rfc4122);
     }
