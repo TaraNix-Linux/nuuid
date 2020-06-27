@@ -172,6 +172,9 @@ impl Uuid {
     /// # Panics
     ///
     /// If `buf.len()` is not >= 36
+    // TODO: Use array when const stuff improves?
+    // Right now try_into only exists for up to 32, so requiring an
+    // array here would be inconvenient in practice.
     pub fn to_string(self, buf: &mut [u8]) -> &str {
         assert!(buf.len() >= 36, "Buf too small for UUID");
         let bytes = self.to_bytes();
@@ -199,6 +202,9 @@ impl Uuid {
     /// # Panics
     ///
     /// If `buf.len()` is not >= 45
+    // TODO: Use array when const stuff improves?
+    // Right now try_into only exists for up to 32, so requiring an
+    // array here would be inconvenient in practice.
     pub fn to_urn(self, buf: &mut [u8]) -> &str {
         assert!(buf.len() >= 45, "Buf too small for UUID");
         buf[..9].copy_from_slice(b"urn:uuid:");
