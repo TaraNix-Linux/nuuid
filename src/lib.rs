@@ -7,6 +7,10 @@ use core::{
     str::FromStr,
 };
 
+const UUID_STR_LENGTH: usize = 36;
+const UUID_URN_LENGTH: usize = 45;
+const UUID_URN: &str = "urn:uuid:";
+
 /// A 16 byte with the UUID.
 pub type Bytes = [u8; 16];
 
@@ -206,8 +210,44 @@ impl Uuid {
 impl FromStr for Uuid {
     type Err = ParseUuidError;
 
-    fn from_str(_: &str) -> Result<Self, Self::Err> {
-        todo!()
+    fn from_str(mut s: &str) -> Result<Self, Self::Err> {
+        if s.len() == UUID_URN_LENGTH {
+            s = &s[UUID_URN.len()..];
+        }
+        if s.len() != UUID_STR_LENGTH {
+            return Err(ParseUuidError);
+        }
+        let mut raw = [0; 16];
+        let mut buf: &mut [u8] = &mut raw;
+        for data in s.split('-') {
+            match data.len() {
+                8 => {
+                    buf[..4].copy_from_slice(
+                        &u32::from_str_radix(data, 16)
+                            .or(Err(ParseUuidError))?
+                            .to_be_bytes(),
+                    );
+                    buf = &mut buf[4..];
+                }
+                4 => {
+                    buf[..2].copy_from_slice(
+                        &u16::from_str_radix(data, 16)
+                            .or(Err(ParseUuidError))?
+                            .to_be_bytes(),
+                    );
+                    buf = &mut buf[2..];
+                }
+                12 => {
+                    buf[..6].copy_from_slice(
+                        &u64::from_str_radix(data, 16)
+                            .or(Err(ParseUuidError))?
+                            .to_be_bytes()[2..],
+                    );
+                }
+                _ => return Err(ParseUuidError),
+            }
+        }
+        Ok(Uuid::from_bytes(raw))
     }
 }
 
@@ -220,6 +260,14 @@ mod tests {
     const RAW: [u8; 16] = [
         102, 42, 167, 199, 117, 152, 77, 86, 139, 204, 167, 44, 48, 249, 152, 162,
     ];
+
+    #[test]
+    fn parse_string() {
+        let uuid = Uuid::from_str(UUID_V4).unwrap();
+        assert_eq!(RAW, uuid.to_bytes(), "Parsed UUID bytes don't match");
+        let uuid = Uuid::from_str(UUID_V4_URN).unwrap();
+        assert_eq!(RAW, uuid.to_bytes(), "Parsed UUID bytes don't match");
+    }
 
     #[test]
     fn string() {
