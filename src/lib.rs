@@ -1,7 +1,6 @@
 //! Create and use UUID's
 // #![cfg_attr(not(test), no_std)]
 use bitvec::prelude::*;
-use core::convert::TryInto;
 
 /// A 16 byte with the UUID.
 pub type Bytes = [u8; 16];
