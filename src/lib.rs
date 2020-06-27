@@ -102,10 +102,7 @@ mod tests {
     #[test]
     fn info() {
         let uuid = Uuid::from_bytes(RAW);
-        // dbg!(uuid);
-        dbg!(uuid.variant());
-        dbg!(uuid.version());
         assert_eq!(uuid.version(), Version::Random);
-        todo!("test")
+        assert_eq!(uuid.variant(), Variant::Rfc4122);
     }
 }
