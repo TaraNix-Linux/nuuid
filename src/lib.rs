@@ -1,6 +1,7 @@
 //! Create and use UUID's
 // #![cfg_attr(not(test), no_std)]
 use bitvec::prelude::*;
+use core::str::FromStr;
 
 /// A 16 byte with the UUID.
 pub type Bytes = [u8; 16];
@@ -42,6 +43,10 @@ pub enum Version {
     /// Special case for the nil UUID.
     Nil,
 }
+
+/// Error parsing UUID
+#[derive(Debug)]
+pub struct ParseUuidError;
 
 /// Universally Unique Identifier, or UUID.
 ///
@@ -126,6 +131,14 @@ impl Uuid {
             (false, true, false, true) => Version::Sha1,
             _ => panic!("Invalid version"),
         }
+    }
+}
+
+impl FromStr for Uuid {
+    type Err = ParseUuidError;
+
+    fn from_str(_: &str) -> Result<Self, Self::Err> {
+        todo!()
     }
 }
 
