@@ -328,8 +328,12 @@ impl Uuid {
 }
 
 impl Uuid {
-    /// Convenience for [`Uuid::from_str`] that doesn't require `FromStr` in
+    /// Convenience for `Uuid::from_str` that doesn't require [`FromStr`] in
     /// scope.
+    ///
+    /// See the [`impl`] for more details.
+    ///
+    /// [`impl`]: #impl-FromStr
     #[inline]
     pub fn parse(s: &str) -> Result<Self, ParseUuidError> {
         Uuid::from_str(s)
