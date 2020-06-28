@@ -284,6 +284,9 @@ impl Uuid {
     }
 }
 
+/// Parse a [`Uuid`] from a string
+///
+/// Case insensitive and supports "urn:uuid:"
 impl FromStr for Uuid {
     type Err = ParseUuidError;
 
