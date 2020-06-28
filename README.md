@@ -11,6 +11,10 @@ A `no_std` library to create and use RFC 4122 UUID's in Rust.
 UUID's can be used without requiring a central authority,
 but are not, strictly speaking, guaranteed to be unique, collisions may be possible.
 
+Do not assume they are hard to guess, they should not be used as security capabilities.
+
+Do not assume people can tell if they've been altered at a glance. They can't.
+
 ## Install
 
 ```toml
@@ -26,6 +30,10 @@ which is `no_std` but, depending on target, requires OS system libraries.
 ## Usage
 
 <!-- TODO: Usage -->
+
+## See Also
+
+The other [uuid](https://crates.io/crates/uuid) crate.
 
 ## Contributing
 
