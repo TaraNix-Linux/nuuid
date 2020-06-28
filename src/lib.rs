@@ -4,6 +4,8 @@ use bitvec::prelude::*;
 use core::{convert::TryInto, fmt, fmt::Write as _, str::FromStr};
 use md5::{Digest, Md5};
 use rand::prelude::*;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use sha1::{digest::generic_array::sequence::Shorten, Sha1};
 
 const UUID_STR_LENGTH: usize = 36;
@@ -118,7 +120,10 @@ pub struct ParseUuidError;
 /// as `[u8; 16]`.
 ///
 /// UUID fields **always** considered to be laid out MSB, or big-endian.
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+///
+/// This type is also `serde(transparent)`, when serde is enabled.
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 #[repr(transparent)]
 // TODO: Better Debug, Display. Test Eq/Ord. Examples
 pub struct Uuid(Bytes);
