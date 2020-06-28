@@ -8,6 +8,7 @@ use core::{
 };
 use md5::{Digest, Md5};
 use rand::prelude::*;
+use sha1::{digest::generic_array::sequence::Shorten, Sha1};
 
 const UUID_STR_LENGTH: usize = 36;
 const UUID_URN_LENGTH: usize = 45;
@@ -299,6 +300,29 @@ impl Uuid {
         uuid.set_variant(Variant::Rfc4122);
         uuid
     }
+
+    /// Create a new Version 5 UUID with the provided name and namespace.
+    pub fn new_v5(namespace: Uuid, name: &[u8]) -> Self {
+        let mut hasher = Sha1::new();
+        hasher.update(namespace.to_bytes());
+        hasher.update(name);
+        let mut uuid = Uuid::from_bytes(
+            hasher
+                .finalize()
+                .pop_back()
+                .0
+                .pop_back()
+                .0
+                .pop_back()
+                .0
+                .pop_back()
+                .0
+                .into(),
+        );
+        uuid.set_version(Version::Sha1);
+        uuid.set_variant(Variant::Rfc4122);
+        uuid
+    }
 }
 
 /// Parse a [`Uuid`] from a string
@@ -358,35 +382,50 @@ mod tests {
         102, 42, 167, 199, 117, 152, 77, 86, 139, 204, 167, 44, 48, 249, 152, 162,
     ];
 
-    #[test]
-    #[allow(deprecated)]
-    fn md5() {
+    fn name(fun: fn(Uuid, &[u8]) -> Uuid, ver: Version) {
         let namespace = Uuid::from_bytes(RAW);
         let namespace2 = Uuid::new_v4_seed([0; 32]);
         //
-        let uuid1 = Uuid::new_v3(namespace, b"test");
+        let uuid1 = fun(namespace, b"test");
         // Maybe don't?
         std::thread::sleep(std::time::Duration::from_millis(500));
-        let uuid2 = Uuid::new_v3(namespace, b"test");
+        let uuid2 = fun(namespace, b"test");
         assert_eq!(
             uuid1, uuid2,
             "V3 UUID's from different times with the same name/namespace must be equal"
         );
 
-        let uuid = Uuid::new_v3(namespace, b"Cat");
+        let uuid = fun(namespace, b"Cat");
         assert_ne!(
             uuid, uuid2,
             "UUID's with two different names in the same namespace must NOT be equal"
         );
 
-        let uuid = Uuid::new_v3(namespace2, b"test");
+        let uuid = fun(namespace2, b"test");
         assert_ne!(
             uuid, uuid2,
             "UUID's with the same names in a different namespace must NOT be equal"
         );
 
-        assert_eq!(uuid.version(), Version::Md5);
+        assert_eq!(uuid.version(), ver);
         assert_eq!(uuid.variant(), Variant::Rfc4122);
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn md5() {
+        name(
+            |namespace, name| Uuid::new_v3(namespace, name),
+            Version::Md5,
+        )
+    }
+
+    #[test]
+    fn sha1() {
+        name(
+            |namespace, name| Uuid::new_v5(namespace, name),
+            Version::Sha1,
+        )
     }
 
     #[test]
