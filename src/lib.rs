@@ -294,16 +294,7 @@ impl Uuid {
         let mut hasher = Md5::new();
         hasher.update(namespace.to_bytes());
         hasher.update(name);
-        let bytes = hasher.finalize();
-        let bytes = bytes.as_slice();
-        let mut raw = [0; 16];
-        raw[..3].copy_from_slice(&bytes[..3]);
-        raw[4..6].copy_from_slice(&bytes[4..6]);
-        raw[6..8].copy_from_slice(&bytes[6..8]);
-        raw[8] = bytes[8];
-        raw[9] = bytes[9];
-        let mut uuid = Uuid::from_bytes(raw);
-        // It's okay to set these after.
+        let mut uuid = Uuid::from_bytes(hasher.finalize().into());
         uuid.set_version(Version::Md5);
         uuid.set_variant(Variant::Rfc4122);
         uuid
