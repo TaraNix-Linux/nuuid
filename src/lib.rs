@@ -276,9 +276,8 @@ impl Uuid {
     /// This requires the `getrandom` feature.
     #[cfg(feature = "getrandom")]
     pub fn new_v4() -> Self {
-        let mut bytes = [0; 16];
-        OsRng.fill_bytes(&mut bytes);
-        let mut uuid = Uuid::from_bytes(bytes);
+        let mut uuid = Uuid::from_bytes([0; 16]);
+        OsRng.fill_bytes(&mut uuid.0);
         uuid.set_variant(Variant::Rfc4122);
         uuid.set_version(Version::Random);
         uuid
