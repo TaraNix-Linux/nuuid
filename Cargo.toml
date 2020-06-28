@@ -28,3 +28,11 @@ default = [
 getrandom = [
     "rand/getrandom"
 ]
+
+[dev-dependencies]
+criterion = "0.3.2"
+uuid_ = { version = "0.8.1", package = "uuid", features = ["v4"] }
+
+[[bench]]
+name = "bench"
+harness = false
