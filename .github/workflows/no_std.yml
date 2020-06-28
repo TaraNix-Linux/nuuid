@@ -1,0 +1,22 @@
+name: Test no_std
+on:
+  push:
+    paths: 
+      - '**/*.rs'
+jobs:
+  build:
+    name: Rust project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install no_std stable
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: stable
+            override: true
+            target: thumbv6m-none-eabi
+            profile: minimal
+      - name: Run cargo check
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
