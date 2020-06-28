@@ -235,6 +235,7 @@ impl Uuid {
     }
 
     /// The UUID Variant
+    #[inline]
     pub fn variant(self) -> Variant {
         let bits = &self.0[8].bits::<Msb0>()[..3];
         match (bits[0], bits[1], bits[2]) {
@@ -250,6 +251,7 @@ impl Uuid {
     /// # Panics
     ///
     /// - If the version is invalid
+    #[inline]
     pub fn version(self) -> Version {
         let bits = &self.0[6].bits::<Msb0>()[..4];
         match (bits[0], bits[1], bits[2], bits[3]) {
