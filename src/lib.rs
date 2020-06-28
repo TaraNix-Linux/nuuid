@@ -90,7 +90,7 @@ pub struct ParseUuidError;
 /// as `[u8; 16]`.
 ///
 /// UUID fields **always** laid out MSB, or big-endian.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 #[repr(transparent)]
 pub struct Uuid(Bytes);
 
