@@ -420,14 +420,11 @@ impl fmt::Display for Uuid {
             write!(f, "{}", UUID_URN)?;
         }
         let mut buf = [0; 36];
+        let s = self.to_str(&mut buf);
         if f.alternate() {
-            self.to_str(&mut buf);
-            let s = core::str::from_utf8_mut(&mut buf).or(Err(fmt::Error))?;
             s.make_ascii_uppercase();
-            write!(f, "{}", s)?;
-        } else {
-            write!(f, "{}", self.to_str(&mut buf))?;
         }
+        write!(f, "{}", s)?;
         Ok(())
     }
 }
@@ -510,6 +507,11 @@ mod tests {
             "UUID URN Display didn't match"
         );
         assert_eq!(format!("{}", uuid), UUID_V4, "UUID Display didn't match");
+        assert_eq!(
+            format!("{:#}", uuid),
+            UUID_V4.to_ascii_uppercase(),
+            "UUID # Display didn't match"
+        );
     }
 
     #[test]
