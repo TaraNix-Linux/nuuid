@@ -376,8 +376,11 @@ mod tests {
         let uuid = Uuid::from_bytes(RAW);
         assert_eq!(uuid.version(), Version::Random);
         assert_eq!(uuid.variant(), Variant::Rfc4122);
-        let uuid = Uuid::new_v4();
-        assert_eq!(uuid.version(), Version::Random);
-        assert_eq!(uuid.variant(), Variant::Rfc4122);
+        #[cfg(feature = "getrandom")]
+        {
+            let uuid = Uuid::new_v4();
+            assert_eq!(uuid.version(), Version::Random);
+            assert_eq!(uuid.variant(), Variant::Rfc4122);
+        }
     }
 }
