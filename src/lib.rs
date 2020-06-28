@@ -495,6 +495,27 @@ impl fmt::UpperHex for Uuid {
     }
 }
 
+impl AsRef<[u8]> for Uuid {
+    #[inline]
+    fn as_ref(&self) -> &[u8] {
+        &self.0
+    }
+}
+
+impl AsRef<[u8; 16]> for Uuid {
+    #[inline]
+    fn as_ref(&self) -> &[u8; 16] {
+        &self.0
+    }
+}
+
+impl From<[u8; 16]> for Uuid {
+    #[inline]
+    fn from(b: [u8; 16]) -> Self {
+        Uuid::from_bytes(b)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
