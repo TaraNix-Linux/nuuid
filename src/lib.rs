@@ -128,7 +128,7 @@ impl std::error::Error for ParseUuidError {}
 /// This type is `repr(transparent)` and guaranteed to have the same layout
 /// as `[u8; 16]`.
 ///
-/// UUID fields **always** considered to be laid out MSB, or big-endian.
+/// UUID fields are always considered to be laid out MSB, or big-endian.
 ///
 /// This type is also `serde(transparent)`, when serde is enabled.
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)]
