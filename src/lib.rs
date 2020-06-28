@@ -1,11 +1,7 @@
 //! Create and use UUID's
 #![cfg_attr(not(test), no_std)]
 use bitvec::prelude::*;
-use core::{
-    convert::TryInto,
-    fmt::{Error, Result as FmtResult, Write},
-    str::FromStr,
-};
+use core::{convert::TryInto, fmt, fmt::Write as _, str::FromStr};
 use md5::{Digest, Md5};
 use rand::prelude::*;
 use sha1::{digest::generic_array::sequence::Shorten, Sha1};
@@ -33,10 +29,10 @@ impl<'a> BytesWrapper<'a> {
     }
 }
 
-impl<'a> Write for BytesWrapper<'a> {
-    fn write_str(&mut self, s: &str) -> FmtResult {
+impl<'a> fmt::Write for BytesWrapper<'a> {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
         if (self.bytes.len() - self.offset) < s.len() {
-            return Err(Error);
+            return Err(fmt::Error);
         }
         self.bytes[self.offset..][..s.len()].copy_from_slice(s.as_bytes());
         self.offset += s.len();
@@ -412,6 +408,8 @@ impl FromStr for Uuid {
         Ok(Uuid::from_bytes(raw))
     }
 }
+
+// impl fmt::Di
 
 #[cfg(test)]
 mod tests {
