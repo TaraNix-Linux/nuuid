@@ -12,11 +12,12 @@ jobs:
       - name: Install no_std stable
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable-thumbv6m-none-eabi
+          toolchain: stable
           override: true
           profile: minimal
+          target: thumbv6m-none-eabi
       - name: Run cargo check
         uses: actions-rs/cargo@v1
         with:
           command: check
-          args: --no-default-features
+          args: --no-default-features --target thumbv6m-none-eabi
