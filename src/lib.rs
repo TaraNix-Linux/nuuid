@@ -183,7 +183,7 @@ impl Uuid {
 
     /// Return the UUID as mixed-endian bytes.
     ///
-    /// See [`Uuid::from_bytes_le`] for details.
+    /// See [`Uuid::from_bytes_me`] for details.
     #[inline]
     pub fn to_bytes_me(self) -> Bytes {
         self.swap_endian().to_bytes()
