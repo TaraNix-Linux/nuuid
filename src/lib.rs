@@ -394,8 +394,8 @@ mod tests {
     ];
 
     fn name(fun: fn(Uuid, &[u8]) -> Uuid, ver: Version) {
-        let namespace = Uuid::from_bytes(RAW);
-        let namespace2 = Uuid::new_v4_seed([0; 32]);
+        let namespace = Uuid::new_v4();
+        let namespace2 = Uuid::new_v4();
         //
         let uuid1 = fun(namespace, b"test");
         // Maybe don't?
