@@ -131,10 +131,10 @@ impl std::error::Error for ParseUuidError {}
 /// UUID fields **always** considered to be laid out MSB, or big-endian.
 ///
 /// This type is also `serde(transparent)`, when serde is enabled.
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 #[repr(transparent)]
-// TODO: Better Debug, Display. Test Eq/Ord. Examples
+// TODO: Test Eq/Ord. Examples
 pub struct Uuid(Bytes);
 
 impl Uuid {
