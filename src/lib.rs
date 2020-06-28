@@ -409,7 +409,28 @@ impl FromStr for Uuid {
     }
 }
 
-// impl fmt::Di
+/// Display the [`Uuid`], by default in lowercase.
+///
+/// The `#` modifier can be used to get uppercase.
+///
+/// The `-` modifier can be used to get it as a urn.
+impl fmt::Display for Uuid {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if f.sign_minus() {
+            write!(f, "{}", UUID_URN)?;
+        }
+        let mut buf = [0; 36];
+        if f.alternate() {
+            self.to_str(&mut buf);
+            let s = core::str::from_utf8_mut(&mut buf).or(Err(fmt::Error))?;
+            s.make_ascii_uppercase();
+            write!(f, "{}", s)?;
+        } else {
+            write!(f, "{}", self.to_str(&mut buf))?;
+        }
+        Ok(())
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -484,6 +505,11 @@ mod tests {
         assert_eq!(&s[..36], UUID_V4, "UUID strings didn't match");
         let s = uuid.to_urn(&mut buf);
         assert_eq!(s, UUID_V4_URN, "UUID URN strings didn't match");
+        println!("UUID: `{}`", uuid);
+        println!("UUID: `{:-}`", uuid);
+        println!("UUID: `{:#}`", uuid);
+        println!("UUID: `{:-#}`", uuid);
+        todo!()
     }
 
     #[test]

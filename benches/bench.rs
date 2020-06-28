@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BatchSize, Criterion, Throughput};
 use std::str::FromStr;
 use uuid::{Rng, Uuid};
 use uuid_::Uuid as Uuid_;
@@ -28,7 +28,7 @@ fn new_v5(c: &mut Criterion) {
     });
 }
 
-fn parse(c: &mut Criterion) {
+fn from_str(c: &mut Criterion) {
     let mut group = c.benchmark_group("from_str");
     group.throughput(Throughput::Elements(1));
     let mut buf = [0; 36];
@@ -39,5 +39,33 @@ fn parse(c: &mut Criterion) {
     group.bench_with_input("Uuid_", input, |b, i| b.iter(|| Uuid_::from_str(i)));
 }
 
-criterion_group!(benches, new_v4, new_v5, parse);
+fn to_str(c: &mut Criterion) {
+    let mut group = c.benchmark_group("to_str");
+    group.throughput(Throughput::Elements(1));
+
+    let uuid = Uuid::new_v4();
+    let uuid_ = Uuid_::from_bytes(uuid.to_bytes());
+
+    group.bench_function("Uuid", |b| {
+        b.iter_batched_ref(
+            || [0; 36],
+            |buf| {
+                uuid.to_str(buf);
+            },
+            BatchSize::SmallInput,
+        )
+    });
+
+    group.bench_function("Uuid_", |b| {
+        b.iter_batched_ref(
+            || [0; 36],
+            |buf| {
+                uuid_.to_hyphenated().encode_lower(buf);
+            },
+            BatchSize::SmallInput,
+        )
+    });
+}
+
+criterion_group!(benches, new_v4, new_v5, from_str, to_str);
 criterion_main!(benches);
