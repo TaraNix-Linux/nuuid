@@ -289,7 +289,7 @@ impl Uuid {
     /// # Note
     ///
     /// Version 3 UUID's use the obsolete MD5 algorithm.
-    #[deprecated = "Version 3 UUID's use MD5. Prefer Uuid::new_v4, which uses SHA-1."]
+    #[deprecated = "Version 3 UUID's use MD5. Prefer Uuid::new_v5, which uses SHA-1."]
     pub fn new_v3(namespace: Uuid, name: &[u8]) -> Self {
         let mut hasher = Md5::new();
         hasher.update(namespace.to_bytes());
