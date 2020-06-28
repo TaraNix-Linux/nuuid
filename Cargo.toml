@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Diana"]
 edition = "2018"
 
+[dependencies]
+md-5 = "0.9.0"
+
 [dependencies.bitvec]
 version = "0.17.4"
 default-features = false

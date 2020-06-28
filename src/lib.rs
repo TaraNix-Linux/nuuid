@@ -6,6 +6,7 @@ use core::{
     fmt::{Error, Result as FmtResult, Write},
     str::FromStr,
 };
+use md5::{Digest, Md5};
 use rand::prelude::*;
 
 const UUID_STR_LENGTH: usize = 36;
@@ -282,6 +283,31 @@ impl Uuid {
         uuid.set_version(Version::Random);
         uuid
     }
+
+    /// Create a new Version 3 UUID with the provided name and namespace.
+    ///
+    /// # Note
+    ///
+    /// Version 3 UUID's use the obsolete MD5 algorithm.
+    #[deprecated = "Version 3 UUID's use MD5. Prefer Uuid::new_v4, which uses SHA-1."]
+    pub fn new_v3(namespace: Uuid, name: &[u8]) -> Self {
+        let mut hasher = Md5::new();
+        hasher.update(namespace.to_bytes());
+        hasher.update(name);
+        let bytes = hasher.finalize();
+        let bytes = bytes.as_slice();
+        let mut raw = [0; 16];
+        raw[..3].copy_from_slice(&bytes[..3]);
+        raw[4..6].copy_from_slice(&bytes[4..6]);
+        raw[6..8].copy_from_slice(&bytes[6..8]);
+        raw[8] = bytes[8];
+        raw[9] = bytes[9];
+        let mut uuid = Uuid::from_bytes(raw);
+        // It's okay to set these after.
+        uuid.set_version(Version::Md5);
+        uuid.set_variant(Variant::Rfc4122);
+        uuid
+    }
 }
 
 /// Parse a [`Uuid`] from a string
@@ -340,6 +366,37 @@ mod tests {
     const RAW: [u8; 16] = [
         102, 42, 167, 199, 117, 152, 77, 86, 139, 204, 167, 44, 48, 249, 152, 162,
     ];
+
+    #[test]
+    #[allow(deprecated)]
+    fn md5() {
+        let namespace = Uuid::from_bytes(RAW);
+        let namespace2 = Uuid::new_v4_seed([0; 32]);
+        //
+        let uuid1 = Uuid::new_v3(namespace, b"test");
+        // Maybe don't?
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        let uuid2 = Uuid::new_v3(namespace, b"test");
+        assert_eq!(
+            uuid1, uuid2,
+            "V3 UUID's from different times with the same name/namespace must be equal"
+        );
+
+        let uuid = Uuid::new_v3(namespace, b"Cat");
+        assert_ne!(
+            uuid, uuid2,
+            "UUID's with two different names in the same namespace must NOT be equal"
+        );
+
+        let uuid = Uuid::new_v3(namespace2, b"test");
+        assert_ne!(
+            uuid, uuid2,
+            "UUID's with the same names in a different namespace must NOT be equal"
+        );
+
+        assert_eq!(uuid.version(), Version::Md5);
+        assert_eq!(uuid.variant(), Variant::Rfc4122);
+    }
 
     #[test]
     fn parse_string() {
