@@ -44,6 +44,36 @@ impl<'a> Write for BytesWrapper<'a> {
     }
 }
 
+/// A CSPRNG suitable for generating UUID's.
+#[derive(Debug, Clone)]
+pub struct Rng(rand::rngs::StdRng);
+
+impl Rng {
+    /// Create a new Rng using getrandom.
+    #[cfg(feature = "getrandom")]
+    pub fn new() -> Self {
+        Self(StdRng::from_rng(rand::rngs::OsRng).unwrap())
+    }
+
+    /// Create a new Rng from a provided seed.
+    pub fn from_seed(seed: [u8; 32]) -> Self {
+        Self(StdRng::from_seed(seed))
+    }
+
+    /// Forward to rand's fill_bytes
+    fn fill_bytes(&mut self, dest: &mut [u8]) {
+        self.0.fill_bytes(dest)
+    }
+}
+
+#[cfg(feature = "getrandom")]
+impl Default for Rng {
+    #[inline]
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// UUID Variants
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Variant {
@@ -274,23 +304,24 @@ impl Uuid {
     /// Create a new Version 4(Random) UUID.
     ///
     /// This requires the `getrandom` feature.
+    ///
+    /// If generating a lot of UUID's very quickly, prefer [`Uuid::new_v4_rng`].
     #[cfg(feature = "getrandom")]
     pub fn new_v4() -> Self {
-        let mut uuid = Uuid::from_bytes([0; 16]);
-        rand::rngs::OsRng.fill_bytes(&mut uuid.0);
+        let mut uuid = Uuid::nil();
+        Rng::new().fill_bytes(&mut uuid.0);
         uuid.set_variant(Variant::Rfc4122);
         uuid.set_version(Version::Random);
         uuid
     }
 
-    /// Create a new Version 4(Random) UUID,
-    /// using the provided seed.
+    /// Create a new Version 4(Random) UUID, using the provided [`Rng`]
     ///
-    /// `seed` is used to initialize a suitable CSPRNG
-    pub fn new_v4_seed(seed: [u8; 32]) -> Self {
-        let mut bytes = [0; 16];
-        StdRng::from_seed(seed).fill_bytes(&mut bytes);
-        let mut uuid = Uuid::from_bytes(bytes);
+    /// This method is useful if you need to generate a lot of UUID's very
+    /// quickly, since it won't create and seed a new RNG each time.
+    pub fn new_v4_rng(rng: &mut Rng) -> Self {
+        let mut uuid = Uuid::nil();
+        rng.fill_bytes(&mut uuid.0);
         uuid.set_variant(Variant::Rfc4122);
         uuid.set_version(Version::Random);
         uuid

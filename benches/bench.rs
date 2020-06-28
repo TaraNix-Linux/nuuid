@@ -1,13 +1,16 @@
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use std::str::FromStr;
-use uuid::Uuid;
+use uuid::{Rng, Uuid};
 use uuid_::Uuid as Uuid_;
 
 fn new_v4(c: &mut Criterion) {
+    let mut rng = Rng::new();
     let mut group = c.benchmark_group("new_v4");
     group.throughput(Throughput::Elements(1));
-    group.bench_function("Uuid", |b| b.iter(Uuid::new_v4));
-    // NOTE: This uses thread_rng so is faster in a loop.
+    group.bench_function("Uuid", |b| b.iter(|| Uuid::new_v4_rng(&mut rng)));
+    // NOTE: This uses thread_rng, whereas our new_v4 is new each time.
+    // So our bench uses new_v4_rng, which is local and seeded once at the start
+    // by OsRng, similar to thread_rng.
     group.bench_function("Uuid_", |b| b.iter(Uuid_::new_v4));
 }
 
