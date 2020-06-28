@@ -139,6 +139,14 @@ impl Uuid {
             Variant::Reserved => bits.set_all(true),
         }
     }
+
+    /// Swap the in-memory format between big-endian and mixed-endian.
+    fn swap_endian(mut self) -> Self {
+        self.0[0..4].reverse();
+        self.0[4..6].reverse();
+        self.0[6..8].reverse();
+        self
+    }
 }
 
 impl Uuid {
@@ -164,22 +172,15 @@ impl Uuid {
     /// This is primarily for compatibility with legacy version 2 UUID's,
     /// which use a mixed-endian format where the
     /// first three fields are little-endian.
-    pub fn from_bytes_me(mut bytes: Bytes) -> Self {
-        bytes[0..4].reverse();
-        bytes[4..6].reverse();
-        bytes[6..8].reverse();
-        Self(bytes)
+    pub fn from_bytes_me(bytes: Bytes) -> Self {
+        Self(bytes).swap_endian()
     }
 
     /// Return the UUID as mixed-endian bytes.
     ///
     /// See [`Uuid::from_bytes_le`] for details.
     pub fn to_bytes_me(self) -> Bytes {
-        let mut bytes = self.to_bytes();
-        bytes[0..4].reverse();
-        bytes[4..6].reverse();
-        bytes[6..8].reverse();
-        bytes
+        self.swap_endian().to_bytes()
     }
 
     /// Returns true if the UUID is nil.
