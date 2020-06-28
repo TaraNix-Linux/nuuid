@@ -33,7 +33,7 @@ fn parse(c: &mut Criterion) {
     group.throughput(Throughput::Elements(1));
     let mut buf = [0; 36];
     let input = Uuid::new_v4();
-    let input = input.to_string(&mut buf);
+    let input = input.to_str(&mut buf);
 
     group.bench_with_input("Uuid", input, |b, i| b.iter(|| Uuid::from_str(i)));
     group.bench_with_input("Uuid_", input, |b, i| b.iter(|| Uuid_::from_str(i)));

@@ -257,7 +257,7 @@ impl Uuid {
     // TODO: Use array when const stuff improves?
     // Right now try_into only exists for up to 32, so requiring an
     // array here would be inconvenient in practice.
-    pub fn to_string(self, buf: &mut [u8]) -> &str {
+    pub fn to_str(self, buf: &mut [u8]) -> &str {
         assert!(buf.len() >= 36, "Buf too small for UUID");
         let bytes = self.to_bytes();
         let time_low = u32::from_be_bytes(bytes[..4].try_into().unwrap());
@@ -290,7 +290,7 @@ impl Uuid {
     pub fn to_urn(self, buf: &mut [u8]) -> &str {
         assert!(buf.len() >= 45, "Buf too small for UUID");
         buf[..9].copy_from_slice(b"urn:uuid:");
-        self.to_string(&mut buf[9..]);
+        self.to_str(&mut buf[9..]);
         core::str::from_utf8(buf).expect("BUG: Invalid UTF8")
     }
 }
@@ -479,7 +479,7 @@ mod tests {
     fn string() {
         let uuid = Uuid::from_bytes(RAW);
         let mut buf = [0; 45];
-        let s = uuid.to_string(&mut buf);
+        let s = uuid.to_str(&mut buf);
         println!("UUID: `{}`", s);
         assert_eq!(&s[..36], UUID_V4, "UUID strings didn't match");
         let s = uuid.to_urn(&mut buf);
