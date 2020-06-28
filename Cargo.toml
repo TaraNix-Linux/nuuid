@@ -30,8 +30,8 @@ getrandom = [
 ]
 
 [dev-dependencies]
-criterion = "0.3.2"
 # UGH cargo leaks features from v4 and v5 that break no_std.
+# criterion = "0.3.2"
 # uuid_ = { version = "0.8.1", package = "uuid", features = ["v4", "v5"] }
 
 [[bench]]
