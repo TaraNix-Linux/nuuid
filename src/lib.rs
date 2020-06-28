@@ -7,7 +7,7 @@ use core::{
     str::FromStr,
 };
 use md5::{Digest, Md5};
-use rand::prelude::*;
+use rand::{prelude::*, rngs::OsRng};
 use sha1::{digest::generic_array::sequence::Shorten, Sha1};
 
 const UUID_STR_LENGTH: usize = 36;
@@ -277,7 +277,7 @@ impl Uuid {
     #[cfg(feature = "getrandom")]
     pub fn new_v4() -> Self {
         let mut bytes = [0; 16];
-        StdRng::from_entropy().fill_bytes(&mut bytes);
+        OsRng.fill_bytes(&mut bytes);
         let mut uuid = Uuid::from_bytes(bytes);
         uuid.set_variant(Variant::Rfc4122);
         uuid.set_version(Version::Random);
