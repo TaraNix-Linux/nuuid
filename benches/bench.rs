@@ -7,6 +7,7 @@ fn new_v4(c: &mut Criterion) {
     let mut group = c.benchmark_group("new_v4");
     group.throughput(Throughput::Elements(1));
     group.bench_function("Uuid", |b| b.iter(Uuid::new_v4));
+    // NOTE: This uses thread_rng so is faster in a loop.
     group.bench_function("Uuid_", |b| b.iter(Uuid_::new_v4));
 }
 
