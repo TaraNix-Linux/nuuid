@@ -141,6 +141,7 @@ impl Uuid {
     }
 
     /// Swap the in-memory format between big-endian and mixed-endian.
+    #[inline]
     fn swap_endian(mut self) -> Self {
         self.0[0..4].reverse();
         self.0[4..6].reverse();
@@ -151,16 +152,19 @@ impl Uuid {
 
 impl Uuid {
     /// The special Nil UUID, where all bits are set to zero.
+    #[inline]
     pub const fn nil() -> Self {
         Uuid([0; 16])
     }
 
     /// Create a UUID from bytes.
+    #[inline]
     pub const fn from_bytes(bytes: Bytes) -> Self {
         Self(bytes)
     }
 
     /// Return the UUID as it's bytes.
+    #[inline]
     pub const fn to_bytes(self) -> Bytes {
         self.0
     }
@@ -172,6 +176,7 @@ impl Uuid {
     /// This is primarily for compatibility with legacy version 2 UUID's,
     /// which use a mixed-endian format where the
     /// first three fields are little-endian.
+    #[inline]
     pub fn from_bytes_me(bytes: Bytes) -> Self {
         Self(bytes).swap_endian()
     }
@@ -179,11 +184,13 @@ impl Uuid {
     /// Return the UUID as mixed-endian bytes.
     ///
     /// See [`Uuid::from_bytes_le`] for details.
+    #[inline]
     pub fn to_bytes_me(self) -> Bytes {
         self.swap_endian().to_bytes()
     }
 
     /// Returns true if the UUID is nil.
+    #[inline]
     pub fn is_nil(self) -> bool {
         self.0 == Self::nil().0
     }
