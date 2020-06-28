@@ -276,9 +276,12 @@ impl Uuid {
     /// This requires the `getrandom` feature.
     #[cfg(feature = "getrandom")]
     pub fn new_v4() -> Self {
-        let mut seed = [0; 32];
-        StdRng::from_entropy().fill_bytes(&mut seed);
-        Self::new_v4_seed(seed)
+        let mut bytes = [0; 16];
+        StdRng::from_entropy().fill_bytes(&mut bytes);
+        let mut uuid = Uuid::from_bytes(bytes);
+        uuid.set_variant(Variant::Rfc4122);
+        uuid.set_version(Version::Random);
+        uuid
     }
 
     /// Create a new Version 4(Random) UUID,
