@@ -94,6 +94,7 @@ pub struct ParseUuidError;
 /// UUID fields **always** laid out MSB, or big-endian.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 #[repr(transparent)]
+// TODO: Better Debug, Display. Test Eq/Ord. Examples
 pub struct Uuid(Bytes);
 
 impl Uuid {
