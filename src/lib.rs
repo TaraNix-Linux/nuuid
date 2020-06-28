@@ -217,8 +217,18 @@ impl Uuid {
 impl Uuid {
     /// Create a new Version 4(Random) UUID.
     pub fn new_v4() -> Self {
+        let mut seed = [0; 32];
+        StdRng::from_entropy().fill_bytes(&mut seed);
+        Self::new_v4_seed(seed)
+    }
+
+    /// Create a new Version 4(Random) UUID,
+    /// using the provided seed.
+    ///
+    /// `seed` is used to initialize a suitable CSPRNG
+    pub fn new_v4_seed(seed: [u8; 32]) -> Self {
         let mut bytes = [0; 16];
-        StdRng::from_entropy().fill_bytes(&mut bytes);
+        StdRng::from_seed(seed).fill_bytes(&mut bytes);
         let mut uuid = Uuid::from_bytes(bytes);
         // Variant
         let variant = uuid.0[8].bits_mut::<Msb0>();
