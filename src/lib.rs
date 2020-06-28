@@ -1,5 +1,5 @@
 //! Create and use UUID's
-#![cfg_attr(not(any(test, feature = "std")), no_std)]
+#![cfg_attr(not(test), no_std)]
 use bitvec::prelude::*;
 use core::{
     convert::TryInto,
@@ -261,6 +261,9 @@ impl Uuid {
 
 impl Uuid {
     /// Create a new Version 4(Random) UUID.
+    ///
+    /// This requires the `getrandom` feature.
+    #[cfg(feature = "getrandom")]
     pub fn new_v4() -> Self {
         let mut seed = [0; 32];
         StdRng::from_entropy().fill_bytes(&mut seed);

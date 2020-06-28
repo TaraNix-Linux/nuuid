@@ -12,14 +12,13 @@ features = []
 [dependencies.rand]
 version = "0.7.3"
 default-features = false
-features = [
-    "getrandom",
-]
+features = []
 
 [features]
-default = [
-    #
-]
-std = [
+default = []
+
+# Enable usage of `getrandom`.
+# This can be used in no_std environments, but usually requires OS system libraries.
+getrandom = [
     "rand/getrandom"
 ]
