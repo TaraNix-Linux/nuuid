@@ -31,7 +31,7 @@ getrandom = [
 
 [dev-dependencies]
 criterion = "0.3.2"
-uuid_ = { version = "0.8.1", package = "uuid", features = ["v4"] }
+uuid_ = { version = "0.8.1", package = "uuid", features = ["v4", "v5"] }
 
 [[bench]]
 name = "bench"

@@ -3,11 +3,25 @@ use std::str::FromStr;
 use uuid::Uuid;
 use uuid_::Uuid as Uuid_;
 
-fn new(c: &mut Criterion) {
+fn new_v4(c: &mut Criterion) {
     let mut group = c.benchmark_group("new_v4");
     group.throughput(Throughput::Elements(1));
     group.bench_function("Uuid", |b| b.iter(Uuid::new_v4));
     group.bench_function("Uuid_", |b| b.iter(Uuid_::new_v4));
+}
+
+fn new_v5(c: &mut Criterion) {
+    let namespace = Uuid::from_bytes(*Uuid_::NAMESPACE_DNS.as_bytes());
+    let name = b"example";
+    let input = (namespace, name);
+    let mut group = c.benchmark_group("new_v5");
+    group.throughput(Throughput::Elements(1));
+    group.bench_with_input("Uuid", &input, |b, (namespace, name)| {
+        b.iter(|| Uuid::new_v5(*namespace, *name))
+    });
+    group.bench_with_input("Uuid_", &input, |b, (_, name)| {
+        b.iter(|| Uuid_::new_v5(&Uuid_::NAMESPACE_DNS, *name))
+    });
 }
 
 fn parse(c: &mut Criterion) {
@@ -21,5 +35,5 @@ fn parse(c: &mut Criterion) {
     group.bench_with_input("Uuid_", input, |b, i| b.iter(|| Uuid_::from_str(i)));
 }
 
-criterion_group!(benches, new, parse);
+criterion_group!(benches, new_v4, new_v5, parse);
 criterion_main!(benches);
