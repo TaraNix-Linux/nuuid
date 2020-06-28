@@ -15,6 +15,7 @@ const UUID_URN: &str = "urn:uuid:";
 /// A 16 byte with the UUID.
 pub type Bytes = [u8; 16];
 
+/// Used to write out UUID's to a user-provided buffer.
 struct BytesWrapper<'a> {
     bytes: &'a mut [u8],
     offset: usize,
