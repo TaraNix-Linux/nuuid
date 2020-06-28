@@ -4,7 +4,7 @@
 
 Uuid library for Rust
 
-A library to create and use RFC 4122 UUID's in Rust.
+A `no_std` library to create and use RFC 4122 UUID's in Rust.
 
 ## Security
 
@@ -19,6 +19,9 @@ uuid = "0.1.0"
 ```
 
 ### Dependencies
+
+Depends on [`getrandom`](https://crates.io/crates/getrandom) by default,
+which is `no_std` but, depending on target, requires OS system libraries.
 
 ## Usage
 
