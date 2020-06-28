@@ -217,7 +217,7 @@ impl Uuid {
 impl Uuid {
     /// Create a new Version 4(Random) UUID.
     pub fn new_v4() -> Self {
-        let mut uuid = Uuid::from_bytes(rand::random::<u128>().to_ne_bytes());
+        let mut uuid = Uuid::from_bytes(rand::random::<[u8; 16]>());
         // Variant
         let variant = uuid.0[8].bits_mut::<Msb0>();
         variant[..2].set_all(false);
