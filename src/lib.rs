@@ -118,7 +118,7 @@ pub struct ParseUuidError;
 /// as `[u8; 16]`.
 ///
 /// UUID fields **always** considered to be laid out MSB, or big-endian.
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 #[repr(transparent)]
 // TODO: Better Debug, Display. Test Eq/Ord. Examples
 pub struct Uuid(Bytes);
@@ -296,6 +296,13 @@ impl Uuid {
 }
 
 impl Uuid {
+    /// Convenience for [`Uuid::from_str`] that doesn't require `FromStr` in
+    /// scope.
+    #[inline]
+    pub fn parse(s: &str) -> Result<Self, ParseUuidError> {
+        Uuid::from_str(s)
+    }
+
     /// Create a new Version 4(Random) UUID.
     ///
     /// This requires the `getrandom` feature.
@@ -365,6 +372,17 @@ impl Uuid {
 /// Parse a [`Uuid`] from a string
 ///
 /// Case insensitive and supports "urn:uuid:"
+///
+/// # Example
+///
+/// ```rust
+/// # use uuid::Uuid;
+/// Uuid::parse("662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
+/// Uuid::parse("662AA7C7-7598-4D56-8BCC-A72C30F998A2").unwrap();
+///
+/// Uuid::parse("urn:uuid:662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
+/// Uuid::parse("urn:uuid:662AA7C7-7598-4D56-8BCC-A72C30F998A2").unwrap();
+/// ```
 impl FromStr for Uuid {
     type Err = ParseUuidError;
 
@@ -409,23 +427,71 @@ impl FromStr for Uuid {
     }
 }
 
-/// Display the [`Uuid`], by default in lowercase.
+/// Display the [`Uuid`] in uppercase hex.
 ///
-/// The `#` modifier can be used to get uppercase.
+/// # Example
 ///
-/// The `-` modifier can be used to get it as a urn.
+/// ```rust
+/// # use uuid::Uuid;
+/// let uuid = Uuid::parse("662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
+/// assert_eq!(format!("{}", uuid), "662AA7C7-7598-4D56-8BCC-A72C30F998A2");
+/// ```
 impl fmt::Display for Uuid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if f.sign_minus() {
+        write!(f, "{:X}", self)
+    }
+}
+
+impl fmt::Debug for Uuid {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Uuid({:X})", self)
+    }
+}
+
+/// Display the [`Uuid`] in lowercase
+///
+/// The alternate(`#`) flag can be used to get a URN.
+///
+/// # Example
+///
+/// ```rust
+/// # use uuid::Uuid;
+/// let uuid = Uuid::parse("662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
+/// assert_eq!(format!("{:x}", uuid), "662aa7c7-7598-4d56-8bcc-a72c30f998a2");
+/// assert_eq!(format!("{:#x}", uuid), "urn:uuid:662aa7c7-7598-4d56-8bcc-a72c30f998a2");
+/// ```
+impl fmt::LowerHex for Uuid {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if f.alternate() {
             write!(f, "{}", UUID_URN)?;
         }
         let mut buf = [0; 36];
         let s = self.to_str(&mut buf);
+        write!(f, "{}", s)
+    }
+}
+
+/// Display the [`Uuid`] in uppercase
+///
+/// The alternate(`#`) flag can be used to get a URN.
+///
+/// # Example
+///
+/// ```rust
+/// # use uuid::Uuid;
+/// let uuid = Uuid::parse("662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
+/// assert_eq!(format!("{:X}", uuid), "662AA7C7-7598-4D56-8BCC-A72C30F998A2");
+/// assert_eq!(format!("{:#X}", uuid), "urn:uuid:662AA7C7-7598-4D56-8BCC-A72C30F998A2");
+/// ```
+impl fmt::UpperHex for Uuid {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if f.alternate() {
-            s.make_ascii_uppercase();
+            write!(f, "{}", UUID_URN)?;
         }
-        write!(f, "{}", s)?;
-        Ok(())
+        let mut buf = [0; 36];
+        let s = self.to_str(&mut buf);
+        s.make_ascii_uppercase();
+        write!(f, "{}", s)
     }
 }
 
@@ -502,15 +568,15 @@ mod tests {
         let s = uuid.to_urn(&mut buf);
         assert_eq!(s, UUID_V4_URN, "UUID URN strings didn't match");
         assert_eq!(
-            format!("{:-}", uuid),
+            format!("{:#x}", uuid),
             UUID_V4_URN,
             "UUID URN Display didn't match"
         );
-        assert_eq!(format!("{}", uuid), UUID_V4, "UUID Display didn't match");
+        assert_eq!(format!("{:x}", uuid), UUID_V4, "UUID Display didn't match");
         assert_eq!(
-            format!("{:#}", uuid),
+            format!("{}", uuid),
             UUID_V4.to_ascii_uppercase(),
-            "UUID # Display didn't match"
+            "UUID Display didn't match"
         );
     }
 
