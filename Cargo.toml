@@ -15,3 +15,11 @@ default-features = false
 features = [
     "getrandom",
 ]
+
+[features]
+default = [
+    #
+]
+std = [
+    "rand/getrandom"
+]

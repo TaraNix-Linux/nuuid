@@ -1,5 +1,5 @@
 //! Create and use UUID's
-#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(any(test, feature = "std")), no_std)]
 use bitvec::prelude::*;
 use core::{
     convert::TryInto,
