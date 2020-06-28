@@ -263,7 +263,8 @@ impl Uuid {
         }
     }
 
-    /// Write UUID as a ASCII string into `buf`, and returns it as a string.
+    /// Write UUID as a lowercase ASCII string into `buf`, and returns it as a
+    /// string.
     ///
     /// # Panics
     ///
@@ -293,7 +294,8 @@ impl Uuid {
         core::str::from_utf8_mut(buf.into_inner()).expect("BUG: Invalid UTF8")
     }
 
-    /// Write a UUID as a ASCII string into `buf`, and return it as a string.
+    /// Write a UUID as a lowercase ASCII string into `buf`, and return it as a
+    /// string.
     ///
     /// # Panics
     ///
@@ -306,6 +308,20 @@ impl Uuid {
         buf[..9].copy_from_slice(UUID_URN.as_bytes());
         self.to_str(&mut buf[9..]);
         core::str::from_utf8_mut(buf).expect("BUG: Invalid UTF8")
+    }
+
+    /// [`Uuid::to_str`], but uppercase.
+    pub fn to_str_upper(self, buf: &mut [u8]) -> &mut str {
+        let s = self.to_str(buf);
+        s.make_ascii_uppercase();
+        s
+    }
+
+    /// [`Uuid::to_urn`], but the UUID is uppercase.
+    pub fn to_urn_upper(self, buf: &mut [u8]) -> &mut str {
+        let s = self.to_urn(buf);
+        s[UUID_URN_LENGTH..].make_ascii_uppercase();
+        s
     }
 }
 
