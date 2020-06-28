@@ -94,6 +94,50 @@ pub struct ParseUuidError;
 pub struct Uuid(Bytes);
 
 impl Uuid {
+    /// Set the UUID Version.
+    fn set_version(&mut self, ver: Version) {
+        // The version is in the 4 highest bits, so we only need the first byte.
+        let bits = self.0[6].bits_mut::<Msb0>();
+        let bits = &mut bits[..4];
+        bits.set_all(false);
+        match ver {
+            Version::Time => bits.store_be(1u8),
+            Version::Dce => bits.store_be(2u8),
+            Version::Md5 => bits.store_be(3u8),
+            Version::Random => bits.store_be(4u8),
+            Version::Sha1 => bits.store_be(5u8),
+            Version::Nil => unreachable!("Can't set UUID to nil version"),
+        }
+    }
+
+    /// Set the UUID Variant, only touching bits as specified.
+    ///
+    /// The version field has several unspecified bits, which this method
+    /// leaves alone. Legacy UUID's can thus be modified losslessly.
+    ///
+    /// When creating UUID's, these unspecified bits should always be zero by
+    /// default anyway.
+    fn set_variant(&mut self, ver: Variant) {
+        // The variant is, variably, in the 3 highest bits.
+        let bits = self.0[8].bits_mut::<Msb0>();
+        let bits = &mut bits[..3];
+        match ver {
+            Variant::Ncs => bits.set(0, true),
+            Variant::Rfc4122 => {
+                bits.set(0, true);
+                bits.set(1, false);
+            }
+            Variant::Microsoft => {
+                bits.set(0, true);
+                bits.set(1, true);
+                bits.set(2, false);
+            }
+            Variant::Reserved => bits.set_all(true),
+        }
+    }
+}
+
+impl Uuid {
     /// The special Nil UUID, where all bits are set to zero.
     pub const fn nil() -> Self {
         Uuid([0; 16])
@@ -230,14 +274,8 @@ impl Uuid {
         let mut bytes = [0; 16];
         StdRng::from_seed(seed).fill_bytes(&mut bytes);
         let mut uuid = Uuid::from_bytes(bytes);
-        // Variant
-        let variant = uuid.0[8].bits_mut::<Msb0>();
-        variant[..2].set_all(false);
-        variant.set(0, true);
-        // Version
-        let version = uuid.0[6].bits_mut::<Msb0>();
-        version[..4].set_all(false);
-        version.set(1, true);
+        uuid.set_variant(Variant::Rfc4122);
+        uuid.set_version(Version::Random);
         uuid
     }
 }
