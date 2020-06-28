@@ -133,7 +133,6 @@ impl Uuid {
         // The version is in the 4 highest bits, so we only need the first byte.
         let bits = self.0[6].bits_mut::<Msb0>();
         let bits = &mut bits[..4];
-        bits.set_all(false);
         match ver {
             Version::Time => bits.store_be(1u8),
             Version::Dce => bits.store_be(2u8),
