@@ -1,5 +1,5 @@
 //! Create and use UUID's
-#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(any(test, feature = "std")), no_std)]
 use bitvec::prelude::*;
 use core::{convert::TryInto, fmt, fmt::Write as _, str::FromStr};
 use md5::{Digest, Md5};
@@ -113,6 +113,15 @@ pub enum Version {
 /// Error parsing UUID
 #[derive(Debug)]
 pub struct ParseUuidError;
+
+impl fmt::Display for ParseUuidError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "ParseUuidError")
+    }
+}
+
+#[cfg(any(test, feature = "std"))]
+impl std::error::Error for ParseUuidError {}
 
 /// Universally Unique Identifier, or UUID.
 ///

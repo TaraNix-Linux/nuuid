@@ -21,8 +21,12 @@ features = []
 
 [features]
 default = [
-    "getrandom"
+    "getrandom",
+    "std",
 ]
+
+# Implements some traits from std.
+std = []
 
 # Enable usage of `getrandom`.
 # This can be used in no_std environments, but usually requires OS system libraries.
