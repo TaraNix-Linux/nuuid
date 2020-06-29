@@ -22,6 +22,13 @@ Do not assume people can tell if they've been altered at a glance. They can't.
 uuid = "0.1.0"
 ```
 
+`no_std` support:
+
+```toml
+[dependencies]
+uuid = { version = "0.1.0", default-features = false }
+```
+
 ### Dependencies
 
 Depends on [`getrandom`](https://crates.io/crates/getrandom) by default,
