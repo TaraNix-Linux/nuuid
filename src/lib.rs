@@ -326,8 +326,8 @@ impl Uuid {
     // array here would be inconvenient in practice.
     pub fn to_urn(self, buf: &mut [u8]) -> &mut str {
         assert!(buf.len() == 45, "Uuid::to_urn requires 45 bytes");
-        buf[..9].copy_from_slice(UUID_URN.as_bytes());
-        self.to_str(&mut buf[9..]);
+        buf[..UUID_URN.len()].copy_from_slice(UUID_URN.as_bytes());
+        self.to_str(&mut buf[UUID_URN.len()..]);
         core::str::from_utf8_mut(buf).expect("BUG: Invalid UTF8")
     }
 
