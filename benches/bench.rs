@@ -67,6 +67,7 @@ fn to_str(c: &mut Criterion) {
     });
 }
 
+#[allow(unused_variables)]
 fn inline(c: &mut Criterion) {
     let mut group = c.benchmark_group("inline");
     let uuid = Uuid::new_v4();
