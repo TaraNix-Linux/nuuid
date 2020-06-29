@@ -348,12 +348,20 @@ impl Uuid {
 }
 
 impl Uuid {
-    /// Convenience for `Uuid::from_str` that doesn't require [`FromStr`] in
-    /// scope.
+    /// Parse a [`Uuid`] from a string
     ///
-    /// See the [`impl`] for more details.
+    /// Case insensitive and supports "urn:uuid:"
     ///
-    /// [`impl`]: #impl-FromStr
+    /// # Example
+    ///
+    /// ```rust
+    /// # use uuid::Uuid;
+    /// Uuid::parse("662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
+    /// Uuid::parse("662AA7C7-7598-4D56-8BCC-A72C30F998A2").unwrap();
+    ///
+    /// Uuid::parse("urn:uuid:662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
+    /// Uuid::parse("urn:uuid:662AA7C7-7598-4D56-8BCC-A72C30F998A2").unwrap();
+    /// ```
     #[inline]
     pub fn parse(s: &str) -> Result<Self, ParseUuidError> {
         Uuid::from_str(s)
@@ -364,6 +372,13 @@ impl Uuid {
     /// This requires the `getrandom` feature.
     ///
     /// If generating a lot of UUID's very quickly, prefer [`Uuid::new_v4_rng`].
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use uuid::Uuid;
+    /// let uuid = Uuid::new_v4();
+    /// ```
     #[cfg(feature = "getrandom")]
     pub fn new_v4() -> Self {
         let mut uuid = Uuid::nil();
@@ -377,6 +392,17 @@ impl Uuid {
     ///
     /// This method is useful if you need to generate a lot of UUID's very
     /// quickly, since it won't create and seed a new RNG each time.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use uuid::{Rng, Uuid};
+    /// # let seed = [0; 32];
+    /// let mut rng = Rng::from_seed(seed);
+    /// for _ in 0..10 {
+    ///     let uuid = Uuid::new_v4_rng(&mut rng);
+    /// }
+    /// ```
     pub fn new_v4_rng(rng: &mut Rng) -> Self {
         let mut uuid = Uuid::nil();
         rng.fill_bytes(&mut uuid.0);
@@ -390,6 +416,13 @@ impl Uuid {
     /// # Note
     ///
     /// Version 3 UUID's use the obsolete MD5 algorithm.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use uuid::{NAMESPACE_DNS, Uuid};
+    /// let uuid = Uuid::new_v3(NAMESPACE_DNS, b"example.com");
+    /// ```
     #[deprecated = "Version 3 UUID's use MD5. Prefer Uuid::new_v5, which uses SHA-1."]
     pub fn new_v3(namespace: Uuid, name: &[u8]) -> Self {
         let mut hasher = Md5::new();
@@ -402,6 +435,13 @@ impl Uuid {
     }
 
     /// Create a new Version 5 UUID with the provided name and namespace.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use uuid::{NAMESPACE_DNS, Uuid};
+    /// let uuid = Uuid::new_v5(NAMESPACE_DNS, b"example.com");
+    /// ```
     pub fn new_v5(namespace: Uuid, name: &[u8]) -> Self {
         let mut hasher = Sha1::new();
         hasher.update(namespace.to_bytes());
@@ -425,20 +465,7 @@ impl Uuid {
     }
 }
 
-/// Parse a [`Uuid`] from a string
-///
-/// Case insensitive and supports "urn:uuid:"
-///
-/// # Example
-///
-/// ```rust
-/// # use uuid::Uuid;
-/// Uuid::parse("662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
-/// Uuid::parse("662AA7C7-7598-4D56-8BCC-A72C30F998A2").unwrap();
-///
-/// Uuid::parse("urn:uuid:662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
-/// Uuid::parse("urn:uuid:662AA7C7-7598-4D56-8BCC-A72C30F998A2").unwrap();
-/// ```
+/// See [`Uuid::parse`] for details.
 impl FromStr for Uuid {
     type Err = ParseUuidError;
 
