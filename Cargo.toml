@@ -19,6 +19,15 @@ version          = "0.7.3"
 default-features = false
 features         = []
 
+[dependencies.criterion]
+version  = "0.3.2"
+optional = true
+
+[dependencies.uuid_]
+version  = "0.8.1"
+optional = true
+package  = "uuid"
+
 [features]
 default = ["getrandom", "std"]
 
@@ -29,11 +38,11 @@ std = []
 # This can be used in no_std environments, but usually requires OS system libraries.
 getrandom = ["rand/getrandom"]
 
-[dev-dependencies]
+# Internal feature, don't use.
 # UGH cargo leaks features from v4 and v5 that break no_std.
-# criterion = "0.3.2"
-# uuid_     = { version = "0.8.1", package = "uuid", features = ["v4", "v5"] }
+_benching = ["criterion", "uuid_/v4", "uuid_/v5"]
 
 [[bench]]
-name    = "bench"
-harness = false
+name              = "bench"
+harness           = false
+required-features = ["_benching"]
