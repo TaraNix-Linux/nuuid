@@ -308,7 +308,7 @@ impl Uuid {
         let mut buf = BytesWrapper::new(&mut buf[..]);
         write!(
             buf,
-            "{:x}-{:x}-{:x}-{:x}{:x}-{:x}",
+            "{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:012x}",
             time_low, time_mid, time_hi_and_version, clock_seq_hi_and_reserved, clock_seq_low, node
         )
         .expect("BUG: Couldn't write UUID");
@@ -603,6 +603,7 @@ impl From<[u8; 16]> for Uuid {
 mod tests {
     use super::*;
 
+    const UUID_NIL: &str = "00000000-0000-0000-0000-000000000000";
     const UUID_V4: &str = "662aa7c7-7598-4d56-8bcc-a72c30f998a2";
     const UUID_V4_URN: &str = "urn:uuid:662aa7c7-7598-4d56-8bcc-a72c30f998a2";
     const RAW: [u8; 16] = [
@@ -681,6 +682,11 @@ mod tests {
             format!("{}", uuid),
             UUID_V4.to_ascii_uppercase(),
             "UUID Display didn't match"
+        );
+        assert_eq!(
+            format!("{}", Uuid::nil()),
+            UUID_NIL,
+            "Nil UUID Display didn't work!"
         );
     }
 
