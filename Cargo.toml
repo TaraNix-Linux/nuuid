@@ -1,44 +1,39 @@
 [package]
-name = "uuid"
+name    = "uuid"
 version = "0.1.0"
 authors = ["Diana"]
 edition = "2018"
 
 [dependencies]
-md-5 = { version = "0.9.1", default-features = false }
+md-5  = { version = "0.9.1", default-features = false }
 sha-1 = { version = "0.9.1", default-features = false }
 serde = { version = "1.0.114", optional = true, default-features = false, features = ["derive"] }
 
 [dependencies.bitvec]
-version = "0.17.4"
+version          = "0.17.4"
 default-features = false
-features = []
+features         = []
 
 [dependencies.rand]
-version = "0.7.3"
+version          = "0.7.3"
 default-features = false
-features = []
+features         = []
 
 [features]
-default = [
-    "getrandom",
-    "std",
-]
+default = ["getrandom", "std"]
 
 # Implements some traits from std.
 std = []
 
 # Enable usage of `getrandom`.
 # This can be used in no_std environments, but usually requires OS system libraries.
-getrandom = [
-    "rand/getrandom"
-]
+getrandom = ["rand/getrandom"]
 
 [dev-dependencies]
 # UGH cargo leaks features from v4 and v5 that break no_std.
 # criterion = "0.3.2"
-# uuid_ = { version = "0.8.1", package = "uuid", features = ["v4", "v5"] }
+# uuid_     = { version = "0.8.1", package = "uuid", features = ["v4", "v5"] }
 
 [[bench]]
-name = "bench"
+name    = "bench"
 harness = false
