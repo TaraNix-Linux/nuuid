@@ -154,7 +154,6 @@ impl std::error::Error for ParseUuidError {}
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 #[repr(transparent)]
-// TODO: Test Eq/Ord. Examples
 pub struct Uuid(Bytes);
 
 impl Uuid {
