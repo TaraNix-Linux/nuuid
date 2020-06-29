@@ -341,7 +341,7 @@ impl Uuid {
     /// [`Uuid::to_urn`], but the UUID is uppercase.
     pub fn to_urn_upper(self, buf: &mut [u8]) -> &mut str {
         let s = self.to_urn(buf);
-        s[UUID_URN_LENGTH..].make_ascii_uppercase();
+        s[UUID_URN.len()..].make_ascii_uppercase();
         s
     }
 }
@@ -571,9 +571,7 @@ impl fmt::UpperHex for Uuid {
             write!(f, "{}", UUID_URN)?;
         }
         let mut buf = [0; 36];
-        let s = self.to_str(&mut buf);
-        s.make_ascii_uppercase();
-        write!(f, "{}", s)
+        write!(f, "{}", self.to_str_upper(&mut buf))
     }
 }
 
@@ -606,6 +604,7 @@ mod tests {
     const UUID_NIL: &str = "00000000-0000-0000-0000-000000000000";
     const UUID_V4: &str = "662aa7c7-7598-4d56-8bcc-a72c30f998a2";
     const UUID_V4_URN: &str = "urn:uuid:662aa7c7-7598-4d56-8bcc-a72c30f998a2";
+    const UUID_V4_URN_UPPER: &str = "urn:uuid:662AA7C7-7598-4D56-8BCC-A72C30F998A2";
     const RAW: [u8; 16] = [
         102, 42, 167, 199, 117, 152, 77, 86, 139, 204, 167, 44, 48, 249, 152, 162,
     ];
@@ -668,10 +667,21 @@ mod tests {
     fn string() {
         let uuid = Uuid::from_bytes(RAW);
         let mut buf = [0; 45];
-        let s = uuid.to_str(&mut buf[..36]);
-        assert_eq!(&s[..36], UUID_V4, "UUID strings didn't match");
-        let s = uuid.to_urn(&mut buf);
-        assert_eq!(s, UUID_V4_URN, "UUID URN strings didn't match");
+        assert_eq!(
+            &uuid.to_str(&mut buf[..36])[..],
+            UUID_V4,
+            "UUID strings didn't match"
+        );
+        assert_eq!(
+            uuid.to_urn(&mut buf),
+            UUID_V4_URN,
+            "UUID URN strings didn't match"
+        );
+        assert_eq!(
+            uuid.to_urn_upper(&mut buf),
+            UUID_V4_URN_UPPER,
+            "UUID URN upper strings didn't match"
+        );
         assert_eq!(
             format!("{:#x}", uuid),
             UUID_V4_URN,
