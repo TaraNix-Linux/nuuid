@@ -160,7 +160,7 @@ impl Uuid {
     /// Set the UUID Version.
     fn set_version(&mut self, ver: Version) {
         // The version is in the 4 highest bits, so we only need the first byte.
-        let bits = self.0[6].bits_mut::<Msb0>();
+        let bits = self.0[6].view_bits_mut::<Msb0>();
         let bits = &mut bits[..4];
         match ver {
             Version::Time => bits.store_be(1u8),
@@ -181,7 +181,7 @@ impl Uuid {
     /// default anyway.
     fn set_variant(&mut self, ver: Variant) {
         // The variant is, variably, in the 3 highest bits.
-        let bits = self.0[8].bits_mut::<Msb0>();
+        let bits = self.0[8].view_bits_mut::<Msb0>();
         let bits = &mut bits[..3];
         match ver {
             Variant::Ncs => bits.set(0, true),
@@ -256,7 +256,7 @@ impl Uuid {
     /// The UUID Variant
     #[inline]
     pub fn variant(self) -> Variant {
-        let bits = &self.0[8].bits::<Msb0>()[..3];
+        let bits = &self.0[8].view_bits::<Msb0>()[..3];
         match (bits[0], bits[1], bits[2]) {
             (true, true, true) => Variant::Reserved,
             (true, true, false) => Variant::Microsoft,
@@ -272,7 +272,7 @@ impl Uuid {
     /// - If the version is invalid
     #[inline]
     pub fn version(self) -> Version {
-        let bits = &self.0[6].bits::<Msb0>()[..4];
+        let bits = &self.0[6].view_bits::<Msb0>()[..4];
         match (bits[0], bits[1], bits[2], bits[3]) {
             (false, false, false, false) => Version::Nil,
             (false, false, false, true) => Version::Time,
