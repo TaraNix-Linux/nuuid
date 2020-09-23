@@ -34,6 +34,8 @@ uuid = { version = "0.1.0", default-features = false }
 Depends on [`getrandom`](https://crates.io/crates/getrandom) by default,
 which is `no_std` but, depending on target, requires OS system libraries.
 
+This crate is only tested on the latest *stable* Rust.
+
 ## Usage
 
 <!-- TODO: Usage -->
