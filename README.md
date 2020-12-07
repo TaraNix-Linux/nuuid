@@ -1,8 +1,8 @@
-# Uuid
+# Nuuid
 
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-Uuid library for Rust
+A New Uuid(nuuid) library for Rust
 
 A `no_std` library to create and use RFC 4122 UUID's in Rust.
 
@@ -19,14 +19,14 @@ Do not assume people can tell if they've been altered at a glance. They can't.
 
 ```toml
 [dependencies]
-uuid = "0.1.0"
+nuuid = "0.1.0"
 ```
 
 `no_std` support:
 
 ```toml
 [dependencies]
-uuid = { version = "0.1.0", default-features = false }
+nuuid = { version = "0.1.0", default-features = false }
 ```
 
 ### Dependencies
