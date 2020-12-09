@@ -1,8 +1,16 @@
 [package]
-name = "uuid"
-version = "0.1.0"
+name = "nuuid"
+version = "0.1.1"
 authors = ["Diana"]
 edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "A new, no_std, UUID Library"
+repository = "https://github.com/DianaNites/uuid"
+documentation = "https://docs.rs/nuuid"
+readme = "README.md"
+keywords = ["uuid", "guid", "unique"]
+categories = ["no-std", "parser-implementations"]
+
 
 [dependencies]
 md-5 = { version = "0.9.1", default-features = false }
