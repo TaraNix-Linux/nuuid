@@ -402,6 +402,10 @@ impl Uuid {
     /// This method is useful if you need to generate a lot of UUID's very
     /// quickly, since it won't create and seed a new RNG each time.
     ///
+    /// Providing a good seed is left to you, however.
+    /// If a bad seed is used, the resulting UUIDs may not be
+    /// sufficiently random or unique.
+    ///
     /// # Example
     ///
     /// ```rust
@@ -424,7 +428,8 @@ impl Uuid {
     ///
     /// # Note
     ///
-    /// Version 3 UUID's use the obsolete MD5 algorithm.
+    /// Version 3 UUID's use the obsolete MD5 algorithm,
+    /// [`Uuid::new_v5`] should be preferred.
     ///
     /// # Example
     ///
@@ -432,7 +437,6 @@ impl Uuid {
     /// # use nuuid::{NAMESPACE_DNS, Uuid};
     /// let uuid = Uuid::new_v3(NAMESPACE_DNS, b"example.com");
     /// ```
-    #[deprecated = "Version 3 UUID's use MD5. Prefer Uuid::new_v5, which uses SHA-1."]
     pub fn new_v3(namespace: Uuid, name: &[u8]) -> Self {
         let mut hasher = Md5::new();
         hasher.update(namespace.to_bytes());
