@@ -7,7 +7,7 @@ fn new_v4(c: &mut Criterion) {
     let mut rng = Rng::new();
     let mut group = c.benchmark_group("new_v4");
     group.throughput(Throughput::Elements(1));
-    group.bench_function("Uuid", |b| b.iter(|| Uuid::new_v4_rng(&mut rng)));
+    group.bench_function("Nuuid", |b| b.iter(|| Uuid::new_v4_rng(&mut rng)));
     // NOTE: This uses thread_rng, whereas our new_v4 is new each time.
     // So our bench uses new_v4_rng, which is local and seeded once at the start
     // by OsRng, similar to thread_rng.
@@ -20,7 +20,7 @@ fn new_v5(c: &mut Criterion) {
     let input = (namespace, name);
     let mut group = c.benchmark_group("new_v5");
     group.throughput(Throughput::Elements(1));
-    group.bench_with_input("Uuid", &input, |b, (namespace, name)| {
+    group.bench_with_input("Nuuid", &input, |b, (namespace, name)| {
         b.iter(|| Uuid::new_v5(*namespace, *name))
     });
     group.bench_with_input("Uuid_", &input, |b, (_, name)| {
@@ -35,7 +35,7 @@ fn from_str(c: &mut Criterion) {
     let input = Uuid::new_v4();
     let input = input.to_str(&mut buf);
 
-    group.bench_with_input("Uuid", input, |b, i| b.iter(|| Uuid::from_str(i)));
+    group.bench_with_input("Nuuid", input, |b, i| b.iter(|| Uuid::from_str(i)));
     group.bench_with_input("Uuid_", input, |b, i| b.iter(|| Uuid_::from_str(i)));
 }
 
@@ -46,7 +46,7 @@ fn to_str(c: &mut Criterion) {
     let uuid = Uuid::new_v4();
     let uuid_ = Uuid_::from_bytes(uuid.to_bytes());
 
-    group.bench_function("Uuid", |b| {
+    group.bench_function("Nuuid", |b| {
         b.iter_batched_ref(
             || [0; 36],
             |buf| {
