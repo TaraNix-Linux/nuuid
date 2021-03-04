@@ -25,7 +25,7 @@ features = []
 [dependencies.rand]
 version = "0.8.3"
 default-features = false
-features = []
+features = ["std_rng"]
 
 [dependencies.criterion]
 version = "0.3.3"
@@ -40,7 +40,7 @@ package = "uuid"
 default = ["getrandom", "std"]
 
 # Implements some traits from std.
-std = ["rand/std_rng"]
+std = []
 
 # Enable usage of `getrandom`.
 # This can be used in no_std environments, but usually requires OS system libraries.
