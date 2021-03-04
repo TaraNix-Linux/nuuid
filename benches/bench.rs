@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, BatchSize, Criterion, Throughput};
+use nuuid::{Rng, Uuid};
 use std::str::FromStr;
-use uuid::{Rng, Uuid};
 use uuid_::Uuid as Uuid_;
 
 fn new_v4(c: &mut Criterion) {
