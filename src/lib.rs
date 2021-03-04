@@ -290,9 +290,9 @@ impl Uuid {
     /// # Panics
     ///
     /// If `buf.len()` is not == 36
-    // TODO: Use array when const stuff improves?
-    // Right now try_into only exists for up to 32, so requiring an
-    // array here would be inconvenient in practice.
+    // TODO: Use arrays? As of 1.47 they have const generic impls.
+    // But still have to return a `&str`..
+    // Maybe `&mut [u8; 36]`? `TryFrom` is impled for that
     pub fn to_str(self, buf: &mut [u8]) -> &mut str {
         assert!(buf.len() == 36, "Uuid::to_str requires 36 bytes");
         let bytes = self.to_bytes();
@@ -321,9 +321,9 @@ impl Uuid {
     /// # Panics
     ///
     /// If `buf.len()` is not == 45
-    // TODO: Use array when const stuff improves?
-    // Right now try_into only exists for up to 32, so requiring an
-    // array here would be inconvenient in practice.
+    // TODO: Use arrays? As of 1.47 they have const generic impls.
+    // But still have to return a `&str`..
+    // Maybe `&mut [u8; 45]`? `TryFrom` is impled for that
     pub fn to_urn(self, buf: &mut [u8]) -> &mut str {
         assert!(buf.len() == 45, "Uuid::to_urn requires 45 bytes");
         buf[..UUID_URN.len()].copy_from_slice(UUID_URN.as_bytes());
