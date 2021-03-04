@@ -354,7 +354,7 @@ impl Uuid {
     /// # Example
     ///
     /// ```rust
-    /// # use uuid::Uuid;
+    /// # use nuuid::Uuid;
     /// Uuid::parse("662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
     /// Uuid::parse("662AA7C7-7598-4D56-8BCC-A72C30F998A2").unwrap();
     ///
@@ -375,7 +375,7 @@ impl Uuid {
     /// # Example
     ///
     /// ```rust
-    /// # use uuid::Uuid;
+    /// # use nuuid::Uuid;
     /// let uuid = Uuid::new_v4();
     /// ```
     #[cfg(feature = "getrandom")]
@@ -395,7 +395,7 @@ impl Uuid {
     /// # Example
     ///
     /// ```rust
-    /// # use uuid::{Rng, Uuid};
+    /// # use nuuid::{Rng, Uuid};
     /// # let seed = [0; 32];
     /// let mut rng = Rng::from_seed(seed);
     /// for _ in 0..10 {
@@ -419,7 +419,7 @@ impl Uuid {
     /// # Example
     ///
     /// ```rust
-    /// # use uuid::{NAMESPACE_DNS, Uuid};
+    /// # use nuuid::{NAMESPACE_DNS, Uuid};
     /// let uuid = Uuid::new_v3(NAMESPACE_DNS, b"example.com");
     /// ```
     #[deprecated = "Version 3 UUID's use MD5. Prefer Uuid::new_v5, which uses SHA-1."]
@@ -438,7 +438,7 @@ impl Uuid {
     /// # Example
     ///
     /// ```rust
-    /// # use uuid::{NAMESPACE_DNS, Uuid};
+    /// # use nuuid::{NAMESPACE_DNS, Uuid};
     /// let uuid = Uuid::new_v5(NAMESPACE_DNS, b"example.com");
     /// ```
     pub fn new_v5(namespace: Uuid, name: &[u8]) -> Self {
@@ -514,7 +514,7 @@ impl FromStr for Uuid {
 /// # Example
 ///
 /// ```rust
-/// # use uuid::Uuid;
+/// # use nuuid::Uuid;
 /// let uuid = Uuid::parse("662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
 /// assert_eq!(format!("{}", uuid), "662AA7C7-7598-4D56-8BCC-A72C30F998A2");
 /// ```
@@ -537,7 +537,7 @@ impl fmt::Debug for Uuid {
 /// # Example
 ///
 /// ```rust
-/// # use uuid::Uuid;
+/// # use nuuid::Uuid;
 /// let uuid = Uuid::parse("662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
 /// assert_eq!(format!("{:x}", uuid), "662aa7c7-7598-4d56-8bcc-a72c30f998a2");
 /// assert_eq!(format!("{:#x}", uuid), "urn:uuid:662aa7c7-7598-4d56-8bcc-a72c30f998a2");
@@ -560,7 +560,7 @@ impl fmt::LowerHex for Uuid {
 /// # Example
 ///
 /// ```rust
-/// # use uuid::Uuid;
+/// # use nuuid::Uuid;
 /// let uuid = Uuid::parse("662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
 /// assert_eq!(format!("{:X}", uuid), "662AA7C7-7598-4D56-8BCC-A72C30F998A2");
 /// assert_eq!(format!("{:#X}", uuid), "urn:uuid:662AA7C7-7598-4D56-8BCC-A72C30F998A2");
