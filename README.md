@@ -1,6 +1,9 @@
 # Nuuid
 
-[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
+[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg)](https://github.com/RichardLitt/standard-readme)
+[![nuuid crates.io version and link](https://img.shields.io/crates/v/nuuid.svg)](https://crates.io/crates/nuuid)
+![nuuid Crates.io license](https://img.shields.io/crates/l/nuuid)
+[![nuuid docs.rs badge](https://docs.rs/nuuid/badge.svg)](https://docs.rs/nuuid)
 
 A New Uuid(nuuid) library for Rust
 
@@ -19,14 +22,14 @@ Do not assume people can tell if they've been altered at a glance. They can't.
 
 ```toml
 [dependencies]
-nuuid = "0.1.0"
+nuuid = "0.2.1"
 ```
 
 `no_std` support:
 
 ```toml
 [dependencies]
-nuuid = { version = "0.1.0", default-features = false }
+nuuid = { version = "0.2.1", default-features = false }
 ```
 
 ### Dependencies
@@ -38,7 +41,11 @@ This crate is only tested on the latest *stable* Rust.
 
 ## Usage
 
-<!-- TODO: Usage -->
+See the documentation for details
+
+## Changelog
+
+Please see [CHANGELOG](CHANGELOG.md) for version history
 
 ## See Also
 
