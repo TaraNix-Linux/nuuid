@@ -305,7 +305,7 @@ impl Uuid {
         // Leading zeros, and last 48 bits/6 bytes
         node[2..].copy_from_slice(&bytes[10..16]);
         let node = u64::from_be_bytes(node);
-        let mut buf = BytesWrapper::new(&mut buf[..]);
+        let mut buf = BytesWrapper::new(buf);
         write!(
             buf,
             "{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:012x}",
