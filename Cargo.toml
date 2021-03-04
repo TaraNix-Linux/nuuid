@@ -23,9 +23,9 @@ default-features = false
 features = []
 
 [dependencies.rand]
-version = "0.7.3"
+version = "0.8.3"
 default-features = false
-features = []
+features = ["std_rng"]
 
 [dependencies.criterion]
 version = "0.3.3"
