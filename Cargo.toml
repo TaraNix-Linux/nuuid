@@ -40,7 +40,7 @@ package = "uuid"
 default = ["getrandom", "std"]
 
 # Implements some traits from std.
-std = []
+std = ["rand/std_rng"]
 
 # Enable usage of `getrandom`.
 # This can be used in no_std environments, but usually requires OS system libraries.
