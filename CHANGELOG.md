@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+- `Uuid::version` no longer panics, instead returns `Version::Invalid`
+- Improved documentation
+
 ## [0.1.1] - 2020-12-06
 
 ### Changed

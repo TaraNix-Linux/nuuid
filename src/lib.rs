@@ -128,6 +128,9 @@ pub enum Version {
 
     /// Special case for the nil UUID.
     Nil,
+
+    /// Special case for invalid UUIDs.
+    Invalid,
 }
 
 /// Error parsing UUID
@@ -169,6 +172,7 @@ impl Uuid {
             Version::Random => bits.store_be(4u8),
             Version::Sha1 => bits.store_be(5u8),
             Version::Nil => unreachable!("Can't set UUID to nil version"),
+            Version::Invalid => unreachable!("Can't set UUID to invalid version"),
         }
     }
 
@@ -254,6 +258,11 @@ impl Uuid {
     }
 
     /// The UUID Variant
+    ///
+    /// # Warning
+    ///
+    /// Many UUIDs out in the wild are incorrectly generated,
+    /// so this value can't be trusted.
     #[inline]
     pub fn variant(self) -> Variant {
         let bits = &self.0[8].view_bits::<Msb0>()[..3];
@@ -267,9 +276,10 @@ impl Uuid {
 
     /// The UUID Variant
     ///
-    /// # Panics
+    /// # Warning
     ///
-    /// - If the version is invalid
+    /// Many UUIDs out in the wild are incorrectly generated,
+    /// so this value can't be trusted.
     #[inline]
     pub fn version(self) -> Version {
         let bits = &self.0[6].view_bits::<Msb0>()[..4];
@@ -280,7 +290,7 @@ impl Uuid {
             (false, false, true, true) => Version::Md5,
             (false, true, false, false) => Version::Random,
             (false, true, false, true) => Version::Sha1,
-            v => panic!("Invalid version: {:?}", v),
+            _ => Version::Invalid,
         }
     }
 
