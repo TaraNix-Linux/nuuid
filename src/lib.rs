@@ -1,6 +1,5 @@
 //! Create and use UUID's
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
-use bitvec::prelude::*;
 use core::{convert::TryInto, fmt, fmt::Write as _, str::FromStr};
 use md5::{Digest, Md5};
 use rand::prelude::*;
