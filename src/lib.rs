@@ -163,14 +163,25 @@ impl Uuid {
     /// Set the UUID Version.
     fn set_version(&mut self, ver: Version) {
         // The version is in the 4 highest bits, so we only need the first byte.
-        let bits = self.0[6].view_bits_mut::<Msb0>();
-        let bits = &mut bits[..4];
+        // Clear the 4 highest bits.
+        self.0[6] &= 0x0F;
+
         match ver {
-            Version::Time => bits.store_be(1u8),
-            Version::Dce => bits.store_be(2u8),
-            Version::Md5 => bits.store_be(3u8),
-            Version::Random => bits.store_be(4u8),
-            Version::Sha1 => bits.store_be(5u8),
+            Version::Time => {
+                self.0[6] |= 1u8 << 4;
+            }
+            Version::Dce => {
+                self.0[6] |= 2u8 << 4;
+            }
+            Version::Md5 => {
+                self.0[6] |= 3u8 << 4;
+            }
+            Version::Random => {
+                self.0[6] |= 4u8 << 4;
+            }
+            Version::Sha1 => {
+                self.0[6] |= 5u8 << 4;
+            }
             Version::Nil => unreachable!("Can't set UUID to nil version"),
             Version::Invalid => unreachable!("Can't set UUID to invalid version"),
         }
