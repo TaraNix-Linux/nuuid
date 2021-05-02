@@ -6,7 +6,7 @@ use md5::{Digest, Md5};
 use rand::prelude::*;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use sha1::{digest::generic_array::sequence::Shorten, Sha1};
+use sha1::Sha1;
 
 const UUID_STR_LENGTH: usize = 36;
 const UUID_URN_LENGTH: usize = 45;
@@ -515,19 +515,7 @@ impl Uuid {
         let mut hasher = Sha1::new();
         hasher.update(namespace.to_bytes());
         hasher.update(name);
-        let mut uuid = Uuid::from_bytes(
-            hasher
-                .finalize()
-                .pop_back()
-                .0
-                .pop_back()
-                .0
-                .pop_back()
-                .0
-                .pop_back()
-                .0
-                .into(),
-        );
+        let mut uuid = Uuid::from_bytes(hasher.finalize()[..16].try_into().unwrap());
         uuid.set_version(Version::Sha1);
         uuid.set_variant(Variant::Rfc4122);
         uuid
