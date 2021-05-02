@@ -300,7 +300,7 @@ impl Uuid {
         }
     }
 
-    /// The UUID Variant
+    /// The UUID Version
     ///
     /// # Warning
     ///
