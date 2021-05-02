@@ -1,5 +1,6 @@
 //! Create and use UUID's
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 use core::{convert::TryInto, fmt, fmt::Write as _, str::FromStr};
 use md5::{Digest, Md5};
 use rand::prelude::*;
@@ -68,6 +69,7 @@ pub struct Rng(rand::rngs::StdRng);
 impl Rng {
     /// Create a new Rng using getrandom.
     #[cfg(feature = "getrandom")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "getrandom")))]
     pub fn new() -> Self {
         Self(StdRng::from_rng(rand::rngs::OsRng).unwrap())
     }
@@ -83,6 +85,7 @@ impl Rng {
     }
 }
 
+#[cfg_attr(docsrs, doc(cfg(feature = "getrandom")))]
 #[cfg(feature = "getrandom")]
 impl Default for Rng {
     #[inline]
@@ -419,6 +422,7 @@ impl Uuid {
     /// let uuid = Uuid::new_v4();
     /// ```
     #[cfg(feature = "getrandom")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "getrandom")))]
     pub fn new_v4() -> Self {
         let mut uuid = Uuid::nil();
         Rng::new().fill_bytes(&mut uuid.0);
