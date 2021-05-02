@@ -284,11 +284,15 @@ impl Uuid {
     /// # Warning
     ///
     /// Many UUIDs out in the wild are incorrectly generated,
-    /// so this value can't be trusted.
+    /// so this value can't be relied upon.
     #[inline]
     pub fn variant(self) -> Variant {
-        let bits = &self.0[8].view_bits::<Msb0>()[..3];
-        match (bits[0], bits[1], bits[2]) {
+        // Check the highest 3 bits
+        match (
+            self.0[8] >> 7 & 1 == 1,
+            self.0[8] >> 6 & 1 == 1,
+            self.0[8] >> 5 & 1 == 1,
+        ) {
             (true, true, true) => Variant::Reserved,
             (true, true, false) => Variant::Microsoft,
             (true, false, ..) => Variant::Rfc4122,
@@ -301,7 +305,7 @@ impl Uuid {
     /// # Warning
     ///
     /// Many UUIDs out in the wild are incorrectly generated,
-    /// so this value can't be trusted.
+    /// so this value can't be relied upon.
     #[inline]
     pub fn version(self) -> Version {
         let bits = &self.0[6].view_bits::<Msb0>()[..4];
