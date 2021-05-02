@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Documentation typos
 
+### Removed
+
+- `impl From<[u8; 16]> for Uuid`
+
 ## [0.2.1] - 2021-03-04
 
 ## [0.2.0] - 2021-03-04

@@ -659,14 +659,6 @@ impl AsRef<[u8; 16]> for Uuid {
     }
 }
 
-// NOTE: Should this impl exist?
-impl From<[u8; 16]> for Uuid {
-    #[inline]
-    fn from(b: [u8; 16]) -> Self {
-        Uuid::from_bytes(b)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
