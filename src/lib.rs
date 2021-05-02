@@ -195,21 +195,32 @@ impl Uuid {
     /// When creating UUID's, these unspecified bits should always be zero by
     /// default anyway.
     fn set_variant(&mut self, ver: Variant) {
-        // The variant is, variably, in the 3 highest bits.
-        let bits = self.0[8].view_bits_mut::<Msb0>();
-        let bits = &mut bits[..3];
+        // The variant is, variably, in the 3 highest bits of `self.0[8]`.
         match ver {
-            Variant::Ncs => bits.set(0, true),
+            Variant::Ncs => {
+                // Clear the highest bit.
+                self.0[8] &= 0x7F;
+                // Set the highest bit
+                self.0[8] |= 0b1 << 7;
+            }
             Variant::Rfc4122 => {
-                bits.set(0, true);
-                bits.set(1, false);
+                // Clear the highest 2 bits.
+                self.0[8] &= 0x3F;
+                // Set the highest 2 bits
+                self.0[8] |= 0b10 << 6;
             }
             Variant::Microsoft => {
-                bits.set(0, true);
-                bits.set(1, true);
-                bits.set(2, false);
+                // Clear the highest 3 bits.
+                self.0[8] &= 0x3F;
+                // Set the highest 3 bits
+                self.0[8] |= 0b110 << 5;
             }
-            Variant::Reserved => bits.set_all(true),
+            Variant::Reserved => {
+                // Clear the highest 3 bits.
+                self.0[8] &= 0x3F;
+                // Set the highest 3 bits
+                self.0[8] |= 0b111 << 5;
+            }
         }
     }
 
