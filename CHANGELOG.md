@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Removed bitvec as a dependency
+- `Uuid::to_(str|urn)(_upper)` now take arrays as arguments, not slices.
 
 ### Fixed
 

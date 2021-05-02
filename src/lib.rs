@@ -330,14 +330,41 @@ impl Uuid {
     /// Write UUID as a lowercase ASCII string into `buf`, and returns it as a
     /// string.
     ///
-    /// # Panics
+    /// # Examples
     ///
-    /// If `buf.len()` is not == 36
-    // TODO: Use arrays? As of 1.47 they have const generic impls.
-    // But still have to return a `&str`..
-    // Maybe `&mut [u8; 36]`? `TryFrom` is impled for that
-    pub fn to_str(self, buf: &mut [u8]) -> &mut str {
-        assert!(buf.len() == 36, "Uuid::to_str requires 36 bytes");
+    /// With an array
+    ///
+    /// ```rust
+    /// # use nuuid::Uuid;
+    /// # let uuid = Uuid::new_v4();
+    /// let mut buf = [0u8; 36];
+    /// uuid.to_str(&mut buf);
+    /// ```
+    ///
+    /// With a slice
+    ///
+    /// ```rust
+    /// # use nuuid::Uuid;
+    /// # use std::convert::TryInto;
+    /// # let uuid = Uuid::new_v4();
+    /// let mut buf = [0u8; 50];
+    ///
+    /// let buf: &mut [u8] = &mut buf;
+    /// uuid.to_str((&mut buf[..36]).try_into().unwrap());
+    /// ```
+    ///
+    /// With a slice, incorrectly.
+    ///
+    /// ```rust,should_panic
+    /// # use nuuid::Uuid;
+    /// # use std::convert::TryInto;
+    /// # let uuid = Uuid::new_v4();
+    /// let mut buf = [0u8; 50];
+    ///
+    /// let buf: &mut [u8] = &mut buf;
+    /// uuid.to_str(buf.try_into().unwrap());
+    /// ```
+    pub fn to_str(self, buf: &mut [u8; 36]) -> &mut str {
         let bytes = self.to_bytes();
         let time_low = u32::from_be_bytes(bytes[..4].try_into().unwrap());
         let time_mid = u16::from_be_bytes(bytes[4..6].try_into().unwrap());
@@ -361,28 +388,22 @@ impl Uuid {
     /// Write a UUID as a lowercase ASCII string into `buf`, and return it as a
     /// string.
     ///
-    /// # Panics
-    ///
-    /// If `buf.len()` is not == 45
-    // TODO: Use arrays? As of 1.47 they have const generic impls.
-    // But still have to return a `&str`..
-    // Maybe `&mut [u8; 45]`? `TryFrom` is impled for that
-    pub fn to_urn(self, buf: &mut [u8]) -> &mut str {
-        assert!(buf.len() == 45, "Uuid::to_urn requires 45 bytes");
+    /// For usage examples see [`Uuid::to_str`].
+    pub fn to_urn(self, buf: &mut [u8; 45]) -> &mut str {
         buf[..UUID_URN.len()].copy_from_slice(UUID_URN.as_bytes());
-        self.to_str(&mut buf[UUID_URN.len()..]);
+        self.to_str((&mut buf[UUID_URN.len()..]).try_into().unwrap());
         core::str::from_utf8_mut(buf).expect("BUG: Invalid UTF8")
     }
 
     /// [`Uuid::to_str`], but uppercase.
-    pub fn to_str_upper(self, buf: &mut [u8]) -> &mut str {
+    pub fn to_str_upper(self, buf: &mut [u8; 36]) -> &mut str {
         let s = self.to_str(buf);
         s.make_ascii_uppercase();
         s
     }
 
     /// [`Uuid::to_urn`], but the UUID is uppercase.
-    pub fn to_urn_upper(self, buf: &mut [u8]) -> &mut str {
+    pub fn to_urn_upper(self, buf: &mut [u8; 45]) -> &mut str {
         let s = self.to_urn(buf);
         s[UUID_URN.len()..].make_ascii_uppercase();
         s
@@ -716,7 +737,7 @@ mod tests {
         let uuid = Uuid::from_bytes(RAW);
         let mut buf = [0; 45];
         assert_eq!(
-            &uuid.to_str(&mut buf[..36])[..],
+            &uuid.to_str((&mut buf[..36]).try_into().unwrap())[..],
             UUID_V4,
             "UUID strings didn't match"
         );
