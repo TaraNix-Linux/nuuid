@@ -308,8 +308,13 @@ impl Uuid {
     /// so this value can't be relied upon.
     #[inline]
     pub fn version(self) -> Version {
-        let bits = &self.0[6].view_bits::<Msb0>()[..4];
-        match (bits[0], bits[1], bits[2], bits[3]) {
+        // Check the highest 4 bits
+        match (
+            self.0[6] >> 7 & 1 == 1,
+            self.0[6] >> 6 & 1 == 1,
+            self.0[6] >> 5 & 1 == 1,
+            self.0[6] >> 4 & 1 == 1,
+        ) {
             (false, false, false, false) => Version::Nil,
             (false, false, false, true) => Version::Time,
             (false, false, true, false) => Version::Dce,
