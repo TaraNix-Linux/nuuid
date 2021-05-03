@@ -260,9 +260,12 @@ impl Uuid {
     ///
     /// # Note
     ///
-    /// This is primarily for compatibility with legacy version 2 UUID's,
+    /// This is primarily for compatibility with version 2 UUID's,
     /// which use a mixed-endian format where the
     /// first three fields are little-endian.
+    ///
+    /// Common modern use of this format is found in Microsoft GUID's
+    /// and UEFI UUID's.
     #[inline]
     pub fn from_bytes_me(bytes: Bytes) -> Self {
         Self(bytes).swap_endian()
