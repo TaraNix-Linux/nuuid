@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.3.0] - 2021-05-02
+
 ### Changed
 
 - Removed bitvec as a dependency
@@ -46,7 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - no_std UUID's
 
 <!-- next-url -->
-[Unreleased]: https://github.com/DianaNites/nuuid/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/DianaNites/nuuid/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/DianaNites/nuuid/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/DianaNites/nuuid/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/DianaNites/nuuid/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/DianaNites/nuuid/compare/v0.1.0...v0.1.1
