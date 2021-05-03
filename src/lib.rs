@@ -669,7 +669,7 @@ mod tests {
         let uuid2 = fun(namespace, b"test");
         assert_eq!(
             uuid1, uuid2,
-            "V3 UUID's from different times with the same name/namespace must be equal"
+            "UUID's from different times with the same name/namespace must be equal"
         );
 
         let uuid = fun(namespace, b"Cat");
