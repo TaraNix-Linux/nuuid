@@ -689,11 +689,17 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn md5() {
         name(
             |namespace, name| Uuid::new_v3(namespace, name),
             Version::Md5,
+        );
+        let uuid = Uuid::new_v3(NAMESPACE_DNS, b"www.widgets.com");
+        assert_eq!(
+            uuid,
+            // From Appendix B, with errata 1352, since RFC is wrong.
+            // Because of course it is.
+            Uuid::from_str("3d813cbb-47fb-32ba-91df-831e1593ac29").unwrap()
         )
     }
 
