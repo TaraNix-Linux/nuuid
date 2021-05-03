@@ -46,6 +46,11 @@ harness = false
 rustdoc-args = ["--cfg", "docsrs"]
 
 [[package.metadata.release.pre-release-replacements]]
+file = "README.md"
+search = "nuuid = .*"
+replace = "nuuid = \"{{version}}\""
+
+[[package.metadata.release.pre-release-replacements]]
 file = "CHANGELOG.md"
 search = "Unreleased"
 replace = "{{version}}"
