@@ -266,6 +266,9 @@ impl Uuid {
     ///
     /// Common modern use of this format is found in Microsoft GUID's
     /// and UEFI UUID's.
+    ///
+    /// Despite not being per spec, such UUIDs still claim to be version 4,
+    /// however.
     #[inline]
     pub fn from_bytes_me(bytes: Bytes) -> Self {
         Self(bytes).swap_endian()
