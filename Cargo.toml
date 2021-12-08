@@ -13,7 +13,7 @@ categories = ["no-std", "parser-implementations"]
 
 
 [dependencies]
-md-5 = { version = "0.9.1", default-features = false }
+md-5 = { version = "0.10.0", default-features = false }
 sha-1 = { version = "0.9.4", default-features = false }
 serde = { version = "1.0.123", optional = true, default-features = false, features = ["derive"] }
 
