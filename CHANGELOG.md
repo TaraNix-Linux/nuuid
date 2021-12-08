@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.1] - 2021-05-02
 
+### Changed
+
+- Updated RustCrypto crates to 0.10.0
+
 ### Fixed
 
 - Minor typo in README.

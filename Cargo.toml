@@ -13,17 +13,17 @@ categories = ["no-std", "parser-implementations"]
 
 
 [dependencies]
-md-5 = { version = "0.9.1", default-features = false }
-sha-1 = { version = "0.9.4", default-features = false }
-serde = { version = "1.0.123", optional = true, default-features = false, features = ["derive"] }
+md-5 = { version = "0.10.0", default-features = false }
+sha-1 = { version = "0.10.0", default-features = false }
+serde = { version = "1.0.130", optional = true, default-features = false, features = ["derive"] }
 
 [dependencies.rand]
-version = "0.8.3"
+version = "0.8.4"
 default-features = false
 features = ["std_rng"]
 
 [dev-dependencies]
-criterion = "0.3.4"
+criterion = "0.3.5"
 uuid_ = { version = "0.8.2", package = "uuid", features = ["v4", "v5"] }
 
 [features]
