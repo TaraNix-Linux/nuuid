@@ -696,10 +696,7 @@ mod tests {
 
     #[test]
     fn md5() {
-        name(
-            |namespace, name| Uuid::new_v3(namespace, name),
-            Version::Md5,
-        );
+        name(Uuid::new_v3, Version::Md5);
         let uuid = Uuid::new_v3(NAMESPACE_DNS, b"www.widgets.com");
         assert_eq!(
             uuid,
@@ -711,10 +708,7 @@ mod tests {
 
     #[test]
     fn sha1() {
-        name(
-            |namespace, name| Uuid::new_v5(namespace, name),
-            Version::Sha1,
-        )
+        name(Uuid::new_v5, Version::Sha1)
     }
 
     #[test]
@@ -730,7 +724,7 @@ mod tests {
         let uuid = Uuid::from_bytes(RAW);
         let mut buf = [0; 45];
         assert_eq!(
-            &uuid.to_str((&mut buf[..36]).try_into().unwrap())[..],
+            uuid.to_str((&mut buf[..36]).try_into().unwrap()),
             UUID_V4,
             "UUID strings didn't match"
         );
