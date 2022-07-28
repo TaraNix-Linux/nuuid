@@ -64,7 +64,7 @@ fn to_str(c: &mut Criterion) {
         b.iter_batched_ref(
             || [0; 36],
             |buf| {
-                uuid_.to_hyphenated().encode_lower(buf);
+                uuid_.hyphenated().encode_lower(buf);
             },
             BatchSize::SmallInput,
         )
