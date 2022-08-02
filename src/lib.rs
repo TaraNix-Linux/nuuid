@@ -113,6 +113,9 @@ pub enum Variant {
 /// UUID Version
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Version {
+    /// Special case for the nil UUID.
+    Nil = 0,
+
     /// Version 1, time based.
     Time,
 
@@ -127,9 +130,6 @@ pub enum Version {
 
     /// Version 5, SHA-1 name based.
     Sha1,
-
-    /// Special case for the nil UUID.
-    Nil,
 
     /// Special case for invalid UUIDs.
     Invalid,
@@ -164,30 +164,10 @@ pub struct Uuid(Bytes);
 
 impl Uuid {
     /// Set the UUID Version.
+    #[inline]
     fn set_version(&mut self, ver: Version) {
-        // The version is in the 4 highest bits, so we only need the first byte.
-        // Clear the 4 highest bits.
-        self.0[6] &= 0x0F;
-
-        match ver {
-            Version::Time => {
-                self.0[6] |= 1u8 << 4;
-            }
-            Version::Dce => {
-                self.0[6] |= 2u8 << 4;
-            }
-            Version::Md5 => {
-                self.0[6] |= 3u8 << 4;
-            }
-            Version::Random => {
-                self.0[6] |= 4u8 << 4;
-            }
-            Version::Sha1 => {
-                self.0[6] |= 5u8 << 4;
-            }
-            Version::Nil => unreachable!("Can't set UUID to nil version"),
-            Version::Invalid => unreachable!("Can't set UUID to invalid version"),
-        }
+        // `Version` enum matches version layout
+        self.0[6] = (self.0[6] & 0x0F) | ((ver as u8) << 4);
     }
 
     /// Set the UUID Variant, only touching bits as specified.
@@ -197,33 +177,18 @@ impl Uuid {
     ///
     /// When creating UUID's, these unspecified bits should always be zero by
     /// default anyway.
+    #[inline]
     fn set_variant(&mut self, ver: Variant) {
-        // The variant is, variably, in the 3 highest bits of `self.0[8]`.
-        match ver {
-            Variant::Ncs => {
-                // Clear the highest bit.
-                self.0[8] &= 0x7F;
-                // Set the highest bit
-                self.0[8] |= 0b1 << 7;
-            }
-            Variant::Rfc4122 => {
-                // Clear the highest 2 bits.
-                self.0[8] &= 0x3F;
-                // Set the highest 2 bits
-                self.0[8] |= 0b10 << 6;
-            }
-            Variant::Microsoft => {
-                // Clear the highest 3 bits.
-                self.0[8] &= 0x3F;
-                // Set the highest 3 bits
-                self.0[8] |= 0b110 << 5;
-            }
-            Variant::Reserved => {
-                // Clear the highest 3 bits.
-                self.0[8] &= 0x3F;
-                // Set the highest 3 bits
-                self.0[8] |= 0b111 << 5;
-            }
+        let byte = self.0[8];
+        self.0[8] = match ver {
+            // 0xx
+            Variant::Ncs => byte & 0x7F,
+            // 10x
+            Variant::Rfc4122 => (byte & 0x3F) | 0x80,
+            // 110
+            Variant::Microsoft => (byte & 0x1F) | 0xC0,
+            // 111
+            Variant::Reserved => byte | 0xE0,
         }
     }
 
