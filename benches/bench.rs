@@ -138,8 +138,21 @@ fn inline(c: &mut Criterion) {
     // });
 }
 
+fn variant(c: &mut Criterion) {
+    let mut group = c.benchmark_group("UUIDs Variant");
+    group.throughput(Throughput::Elements(1));
+    let input = Uuid::new_v4();
+    let input2 = Uuid_::from_bytes(input.to_bytes());
+
+    group.bench_with_input("Nuuid::variant", &input, |b, u| b.iter(|| u.variant()));
+    group.bench_with_input("Uuid::get_variant", &input2, |b, u| {
+        b.iter(|| u.get_variant())
+    });
+    group.finish();
+}
+
 criterion_group!(
     benches, //
-    new_v4, new_v5, from_str, to_str, inline
+    new_v4, new_v5, from_str, to_str, inline, variant
 );
 criterion_main!(benches);

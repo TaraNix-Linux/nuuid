@@ -263,11 +263,13 @@ impl Uuid {
     /// so this value can't be relied upon.
     #[inline]
     pub fn variant(self) -> Variant {
+        let byte = self.0[8];
         // Check the highest 3 bits
         match (
-            self.0[8] >> 7 & 1 == 1,
-            self.0[8] >> 6 & 1 == 1,
-            self.0[8] >> 5 & 1 == 1,
+            //
+            byte >> 7 & 1 == 1,
+            byte >> 6 & 1 == 1,
+            byte >> 5 & 1 == 1,
         ) {
             (true, true, true) => Variant::Reserved,
             (true, true, false) => Variant::Microsoft,
