@@ -108,6 +108,7 @@ impl Default for Rng {
 
 /// UUID Variants
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum Variant {
     /// Reserved for NCS backward compatibility.
     Ncs,
@@ -124,6 +125,7 @@ pub enum Variant {
 
 /// UUID Version
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum Version {
     /// Special case for the nil UUID.
     Nil = 0,
