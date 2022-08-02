@@ -44,10 +44,12 @@ struct BytesWrapper<'a> {
 }
 
 impl<'a> BytesWrapper<'a> {
+    #[inline]
     fn new(bytes: &'a mut [u8]) -> Self {
         Self { bytes, offset: 0 }
     }
 
+    #[inline]
     fn into_inner(self) -> &'a mut [u8] {
         self.bytes
     }
@@ -378,6 +380,7 @@ impl Uuid {
     /// string.
     ///
     /// For usage examples see [`Uuid::to_str`].
+    #[inline]
     pub fn to_urn(self, buf: &mut [u8; 45]) -> &mut str {
         buf[..UUID_URN.len()].copy_from_slice(UUID_URN.as_bytes());
         self.to_str((&mut buf[UUID_URN.len()..]).try_into().unwrap());
@@ -385,6 +388,7 @@ impl Uuid {
     }
 
     /// [`Uuid::to_str`], but uppercase.
+    #[inline]
     pub fn to_str_upper(self, buf: &mut [u8; 36]) -> &mut str {
         let s = self.to_str(buf);
         s.make_ascii_uppercase();
@@ -392,6 +396,7 @@ impl Uuid {
     }
 
     /// [`Uuid::to_urn`], but the UUID is uppercase.
+    #[inline]
     pub fn to_urn_upper(self, buf: &mut [u8; 45]) -> &mut str {
         let s = self.to_urn(buf);
         s[UUID_URN.len()..].make_ascii_uppercase();
