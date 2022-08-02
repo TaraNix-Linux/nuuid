@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.4.0] - 2022-08-02
+
 ### Added
 
 - `Uuid::parse` now supports braced UUIDs and hyphen-less UUIDs
@@ -77,7 +79,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - no_std UUID's
 
 <!-- next-url -->
-[Unreleased]: https://github.com/DianaNites/nuuid/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/DianaNites/nuuid/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/DianaNites/nuuid/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/DianaNites/nuuid/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/DianaNites/nuuid/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/DianaNites/nuuid/compare/v0.2.1...v0.3.0
