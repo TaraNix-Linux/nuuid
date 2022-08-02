@@ -43,16 +43,16 @@ fn new_v5(c: &mut Criterion) {
 }
 
 fn from_str(c: &mut Criterion) {
-    let mut group = c.benchmark_group("from_str");
+    let mut group = c.benchmark_group("Constructing UUIDs from strings");
     group.throughput(Throughput::Elements(1));
     let mut buf = [0; 36];
     let input = Uuid::new_v4();
     let input = input.to_str(&mut buf);
 
-    group.bench_with_input("Nuuid::from_str", input, |b, i| {
+    group.bench_with_input("Nuuid::from_str(upper hex)", input, |b, i| {
         b.iter(|| Uuid::from_str(i))
     });
-    group.bench_with_input("Uuid::from_str", input, |b, i| {
+    group.bench_with_input("Uuid::from_str(upper hex)", input, |b, i| {
         b.iter(|| Uuid_::from_str(i))
     });
 }
