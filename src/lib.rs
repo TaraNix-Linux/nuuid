@@ -508,35 +508,35 @@ impl FromStr for Uuid {
             return Err(ParseUuidError);
         }
         let mut raw = [0; 16];
-        let mut buf: &mut [u8] = &mut raw;
-        for data in s.split('-') {
-            match data.len() {
-                8 => {
-                    buf[..4].copy_from_slice(
-                        &u32::from_str_radix(data, 16)
-                            .or(Err(ParseUuidError))?
-                            .to_be_bytes(),
-                    );
-                    buf = &mut buf[4..];
-                }
-                4 => {
-                    buf[..2].copy_from_slice(
-                        &u16::from_str_radix(data, 16)
-                            .or(Err(ParseUuidError))?
-                            .to_be_bytes(),
-                    );
-                    buf = &mut buf[2..];
-                }
-                12 => {
-                    buf[..6].copy_from_slice(
-                        &u64::from_str_radix(data, 16)
-                            .or(Err(ParseUuidError))?
-                            .to_be_bytes()[2..],
-                    );
-                }
-                _ => return Err(ParseUuidError),
-            }
-        }
+        let buf: &mut [u8] = &mut raw;
+        // "00000000-0000-0000-0000-000000000000"
+        //          9    14   19   24
+        // - 1
+        buf[..4].copy_from_slice(
+            &u32::from_str_radix(&s[..8], 16)
+                .or(Err(ParseUuidError))?
+                .to_be_bytes(),
+        );
+        buf[4..][..2].copy_from_slice(
+            &u16::from_str_radix(&s[9..13], 16)
+                .or(Err(ParseUuidError))?
+                .to_be_bytes(),
+        );
+        buf[6..][..2].copy_from_slice(
+            &u16::from_str_radix(&s[14..18], 16)
+                .or(Err(ParseUuidError))?
+                .to_be_bytes(),
+        );
+        buf[8..][..2].copy_from_slice(
+            &u16::from_str_radix(&s[19..23], 16)
+                .or(Err(ParseUuidError))?
+                .to_be_bytes(),
+        );
+        buf[10..].copy_from_slice(
+            &u64::from_str_radix(&s[24..], 16)
+                .or(Err(ParseUuidError))?
+                .to_be_bytes()[2..],
+        );
         Ok(Uuid::from_bytes(raw))
     }
 }
