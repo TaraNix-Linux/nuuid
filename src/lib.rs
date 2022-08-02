@@ -513,20 +513,21 @@ impl Uuid {
 impl FromStr for Uuid {
     type Err = ParseUuidError;
 
+    #[inline]
     fn from_str(mut s: &str) -> Result<Self, Self::Err> {
         // Error if greater than max parsable length, or less than shortest
         if s.len() > UUID_URN_LENGTH || s.len() < UUID_SIMPLE_LENGTH || !s.is_ascii() {
             return Err(ParseUuidError);
         }
         // Amount to offset indexing by, to account for "Simple"
-        let mut offset = 0;
+        let mut offset = false;
 
         s = match s.len() {
             UUID_URN_LENGTH => &s[UUID_URN.len()..],
             UUID_BRACED_LENGTH => &s[1..s.len() - 1],
             UUID_STR_LENGTH => s,
             UUID_SIMPLE_LENGTH => {
-                offset = 1;
+                offset = true;
                 s
             }
             _ => return Err(ParseUuidError),
@@ -540,28 +541,48 @@ impl FromStr for Uuid {
         //          9   13  17  21
         // - 1
 
+        let indexes = if !offset {
+            [
+                //
+                (0, 8),
+                (9, 13),
+                (14, 18),
+                (19, 23),
+                (24, 0),
+            ]
+        } else {
+            [
+                //
+                (0, 8),
+                (8, 12),
+                (12, 16),
+                (16, 20),
+                (20, 0),
+            ]
+        };
+
         buf[..4].copy_from_slice(
-            &u32::from_str_radix(&s[..8], 16)
+            &u32::from_str_radix(&s[..indexes[0].1], 16)
                 .or(Err(ParseUuidError))?
                 .to_be_bytes(),
         );
         buf[4..][..2].copy_from_slice(
-            &u16::from_str_radix(&s[9 - offset..13 - offset], 16)
+            &u16::from_str_radix(&s[indexes[1].0..indexes[1].1], 16)
                 .or(Err(ParseUuidError))?
                 .to_be_bytes(),
         );
         buf[6..][..2].copy_from_slice(
-            &u16::from_str_radix(&s[14 - (offset * 2)..18 - (offset * 2)], 16)
+            &u16::from_str_radix(&s[indexes[2].0..indexes[2].1], 16)
                 .or(Err(ParseUuidError))?
                 .to_be_bytes(),
         );
         buf[8..][..2].copy_from_slice(
-            &u16::from_str_radix(&s[19 - (offset * 3)..23 - (offset * 3)], 16)
+            &u16::from_str_radix(&s[indexes[3].0..indexes[3].1], 16)
                 .or(Err(ParseUuidError))?
                 .to_be_bytes(),
         );
         buf[10..].copy_from_slice(
-            &u64::from_str_radix(&s[24 - (offset * 4)..], 16)
+            &u64::from_str_radix(&s[indexes[4].0..], 16)
                 .or(Err(ParseUuidError))?
                 .to_be_bytes()[2..],
         );
