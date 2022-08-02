@@ -9,11 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- `Uuid::parse` now supports braced UUIDs and hyphen-less UUIDs
+
 ### Changed
 
-- Performance improved
+- Improved Performance
+- Dependencies updated
 - Documentation improved
 - `Uuid::version` now returns `Version::Nil` for invalid versions
+- `rand` dependency replaced with `rand_chacha`
+- `Variant` and `Version` are now `non_exhaustive`
 
 ### Removed
 
