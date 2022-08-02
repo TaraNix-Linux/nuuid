@@ -132,9 +132,6 @@ pub enum Version {
 
     /// Version 5, SHA-1 name based.
     Sha1,
-
-    /// Special case for invalid UUIDs.
-    Invalid,
 }
 
 /// Error parsing UUID
@@ -280,6 +277,8 @@ impl Uuid {
 
     /// The UUID Version
     ///
+    /// If the version bits are invalid, [`Version::Nil`] is returned instead.
+    ///
     /// # Warning
     ///
     /// Many UUIDs out in the wild are incorrectly generated,
@@ -299,7 +298,7 @@ impl Uuid {
             (false, false, true, true) => Version::Md5,
             (false, true, false, false) => Version::Random,
             (false, true, false, true) => Version::Sha1,
-            _ => Version::Invalid,
+            _ => Version::Nil,
         }
     }
 

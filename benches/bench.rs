@@ -151,8 +151,21 @@ fn variant(c: &mut Criterion) {
     group.finish();
 }
 
+fn version(c: &mut Criterion) {
+    let mut group = c.benchmark_group("UUIDs Version");
+    group.throughput(Throughput::Elements(1));
+    let input = Uuid::new_v4();
+    let input2 = Uuid_::from_bytes(input.to_bytes());
+
+    group.bench_with_input("Nuuid::version", &input, |b, u| b.iter(|| u.version()));
+    group.bench_with_input("Uuid::get_version", &input2, |b, u| {
+        b.iter(|| u.get_version())
+    });
+    group.finish();
+}
+
 criterion_group!(
     benches, //
-    new_v4, new_v5, from_str, to_str, inline, variant
+    new_v4, new_v5, from_str, to_str, inline, variant, version
 );
 criterion_main!(benches);

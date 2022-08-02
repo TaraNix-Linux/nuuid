@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+- Performance improved
+- `Uuid::version` now returns `Version::Nil` for invalid versions
+
+### Removed
+
+- `Version::Invalid`
+
 ## [0.3.2] - 2021-12-08
 
 ## [0.3.1] - 2021-05-02
