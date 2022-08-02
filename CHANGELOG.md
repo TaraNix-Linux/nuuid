@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Performance improved
+- Documentation improved
 - `Uuid::version` now returns `Version::Nil` for invalid versions
 
 ### Removed

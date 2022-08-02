@@ -307,6 +307,18 @@ impl Uuid {
     ///
     /// # Examples
     ///
+    /// ```rust
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// # use nuuid::Uuid;
+    /// const EXAMPLE_UUID: &str = "662aa7c7-7598-4d56-8bcc-a72c30f998a2";
+    /// let uuid = Uuid::parse(EXAMPLE_UUID)?;
+    ///
+    /// let mut buf = [0u8; 36];
+    /// let string = uuid.to_str(&mut buf);
+    /// assert_eq!(string, EXAMPLE_UUID);
+    /// # Ok(()) }
+    /// ```
+    ///
     /// With an array
     ///
     /// ```rust
@@ -322,9 +334,9 @@ impl Uuid {
     /// # use nuuid::Uuid;
     /// # use std::convert::TryInto;
     /// # let uuid = Uuid::new_v4();
-    /// let mut buf = [0u8; 50];
-    ///
-    /// let buf: &mut [u8] = &mut buf;
+    /// # let mut data = [0u8; 50];
+    /// #
+    /// let buf: &mut [u8] = &mut data;
     /// uuid.to_str((&mut buf[..36]).try_into().unwrap());
     /// ```
     ///
@@ -334,9 +346,9 @@ impl Uuid {
     /// # use nuuid::Uuid;
     /// # use std::convert::TryInto;
     /// # let uuid = Uuid::new_v4();
-    /// let mut buf = [0u8; 50];
-    ///
-    /// let buf: &mut [u8] = &mut buf;
+    /// # let mut data = [0u8; 50];
+    /// #
+    /// let buf: &mut [u8] = &mut data;
     /// uuid.to_str(buf.try_into().unwrap());
     /// ```
     pub fn to_str(self, buf: &mut [u8; 36]) -> &mut str {
