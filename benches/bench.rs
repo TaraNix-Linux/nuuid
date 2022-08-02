@@ -5,7 +5,7 @@ use std::str::FromStr;
 use uuid_::{Builder, Uuid as Uuid_};
 
 fn new_v4(c: &mut Criterion) {
-    let mut group = c.benchmark_group("default vs default");
+    let mut group = c.benchmark_group("Generating new_v4 UUIDs");
     group.throughput(Throughput::Elements(1));
     let mut rng = Rng::new();
 
@@ -25,23 +25,20 @@ fn new_v4(c: &mut Criterion) {
             use rand::RngCore;
             let mut bytes = [0u8; 16];
             rand::rngs::OsRng.fill_bytes(&mut bytes);
-            Builder::from_random_bytes(bytes)
+            Builder::from_random_bytes(black_box(bytes))
         })
     });
 }
 
 fn new_v5(c: &mut Criterion) {
-    let namespace = Uuid::from_bytes(*Uuid_::NAMESPACE_DNS.as_bytes());
-    let name = b"example";
-    let input = (namespace, name);
     let mut group = c.benchmark_group("new_v5");
     group.throughput(Throughput::Elements(1));
 
-    group.bench_with_input("Nuuid", &input, |b, (namespace, name)| {
-        b.iter(|| Uuid::new_v5(*namespace, black_box(*name)))
+    group.bench_function("Nuuid::new_v5", |b| {
+        b.iter(|| Uuid::new_v5(nuuid::NAMESPACE_DNS, black_box(b"example")))
     });
-    group.bench_with_input("Uuid_", &input, |b, (_, name)| {
-        b.iter(|| Uuid_::new_v5(&Uuid_::NAMESPACE_DNS, black_box(*name)))
+    group.bench_function("Uuid::new_v5", |b| {
+        b.iter(|| Uuid_::new_v5(&Uuid_::NAMESPACE_DNS, black_box(b"example")))
     });
 }
 
@@ -52,8 +49,12 @@ fn from_str(c: &mut Criterion) {
     let input = Uuid::new_v4();
     let input = input.to_str(&mut buf);
 
-    group.bench_with_input("Nuuid", input, |b, i| b.iter(|| Uuid::from_str(i)));
-    group.bench_with_input("Uuid_", input, |b, i| b.iter(|| Uuid_::from_str(i)));
+    group.bench_with_input("Nuuid::from_str", input, |b, i| {
+        b.iter(|| Uuid::from_str(i))
+    });
+    group.bench_with_input("Uuid::from_str", input, |b, i| {
+        b.iter(|| Uuid_::from_str(i))
+    });
 }
 
 fn to_str(c: &mut Criterion) {
@@ -136,5 +137,8 @@ fn inline(c: &mut Criterion) {
     // });
 }
 
-criterion_group!(benches, new_v4, new_v5, from_str, to_str, inline);
+criterion_group!(
+    benches, //
+    new_v4, new_v5, from_str, to_str, inline
+);
 criterion_main!(benches);
