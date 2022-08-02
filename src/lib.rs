@@ -72,16 +72,19 @@ impl Rng {
     /// Create a new Rng using getrandom.
     #[cfg(feature = "getrandom")]
     #[cfg_attr(docsrs, doc(cfg(feature = "getrandom")))]
+    #[inline]
     pub fn new() -> Self {
         Self(StdRng::from_rng(rand::rngs::OsRng).unwrap())
     }
 
     /// Create a new Rng from a provided seed.
+    #[inline]
     pub fn from_seed(seed: [u8; 32]) -> Self {
         Self(StdRng::from_seed(seed))
     }
 
     /// Forward to rand's fill_bytes
+    #[inline]
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         self.0.fill_bytes(dest)
     }
