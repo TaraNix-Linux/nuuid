@@ -59,30 +59,26 @@ fn from_str(c: &mut Criterion) {
 }
 
 fn to_str(c: &mut Criterion) {
-    let mut group = c.benchmark_group("to_str");
+    let mut group = c.benchmark_group("Constructing Strings from UUIDs (to_str)");
     group.throughput(Throughput::Elements(1));
 
     let uuid = Uuid::new_v4();
     let uuid_ = Uuid_::from_bytes(uuid.to_bytes());
 
-    group.bench_function("Nuuid", |b| {
-        b.iter_batched_ref(
-            || [0; 36],
-            |buf| {
-                uuid.to_str(buf);
-            },
-            BatchSize::SmallInput,
-        )
+    let mut buf = [0u8; 36];
+
+    group.bench_function("Nuuid::to_str", |b| {
+        b.iter(|| {
+            uuid.to_str(&mut buf);
+        });
+        buf = [0u8; 36];
     });
 
-    group.bench_function("Uuid_", |b| {
-        b.iter_batched_ref(
-            || [0; 36],
-            |buf| {
-                uuid_.hyphenated().encode_lower(buf);
-            },
-            BatchSize::SmallInput,
-        )
+    group.bench_function("Uuid::hyphenated().encode_lower()", |b| {
+        b.iter(|| {
+            uuid_.hyphenated().encode_lower(&mut buf);
+        });
+        buf = [0u8; 36];
     });
 }
 
