@@ -3,7 +3,12 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 use core::{convert::TryInto, fmt, fmt::Write as _, str::FromStr};
 use md5::{Digest, Md5};
-use rand::prelude::*;
+#[cfg(feature = "getrandom")]
+use rand_chacha::rand_core::OsRng;
+use rand_chacha::{
+    rand_core::{RngCore, SeedableRng},
+    ChaChaRng,
+};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use sha1::Sha1;
@@ -68,7 +73,7 @@ impl<'a> fmt::Write for BytesWrapper<'a> {
 
 /// A CSPRNG suitable for generating UUID's.
 #[derive(Debug, Clone)]
-pub struct Rng(rand::rngs::StdRng);
+pub struct Rng(ChaChaRng);
 
 impl Rng {
     /// Create a new Rng using getrandom.
@@ -76,13 +81,13 @@ impl Rng {
     #[cfg_attr(docsrs, doc(cfg(feature = "getrandom")))]
     #[inline]
     pub fn new() -> Self {
-        Self(StdRng::from_rng(rand::rngs::OsRng).unwrap())
+        Self(ChaChaRng::from_rng(OsRng).unwrap())
     }
 
     /// Create a new Rng from a provided seed.
     #[inline]
     pub fn from_seed(seed: [u8; 32]) -> Self {
-        Self(StdRng::from_seed(seed))
+        Self(ChaChaRng::from_seed(seed))
     }
 
     /// Forward to rand's fill_bytes
@@ -452,7 +457,7 @@ impl Uuid {
     #[inline]
     pub fn new_v4() -> Self {
         let mut uuid = Uuid::nil();
-        rand::rngs::OsRng.fill_bytes(&mut uuid.0);
+        OsRng.fill_bytes(&mut uuid.0);
         uuid.set_variant(Variant::Rfc4122);
         uuid.set_version(Version::Random);
         uuid

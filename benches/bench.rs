@@ -1,5 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use nuuid::{Rng, Uuid};
+use rand_chacha::rand_core::{OsRng, RngCore};
 use std::str::FromStr;
 use uuid_::{Builder, Uuid as Uuid_};
 
@@ -21,9 +22,8 @@ fn new_v4(c: &mut Criterion) {
     // the uuid crate is incapable of doing it as new_v4_rng does.
     group.bench_function("Builder::from_random_bytes", |b| {
         b.iter(|| {
-            use rand::RngCore;
             let mut bytes = [0u8; 16];
-            rand::rngs::OsRng.fill_bytes(&mut bytes);
+            OsRng.fill_bytes(&mut bytes);
             Builder::from_random_bytes(black_box(bytes))
         })
     });
