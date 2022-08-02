@@ -418,7 +418,7 @@ impl Uuid {
     #[cfg_attr(docsrs, doc(cfg(feature = "getrandom")))]
     pub fn new_v4() -> Self {
         let mut uuid = Uuid::nil();
-        Rng::new().fill_bytes(&mut uuid.0);
+        rand::rngs::OsRng.fill_bytes(&mut uuid.0);
         uuid.set_variant(Variant::Rfc4122);
         uuid.set_version(Version::Random);
         uuid
