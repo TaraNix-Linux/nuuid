@@ -42,6 +42,9 @@ getrandom = ["rand/getrandom"]
 name = "bench"
 harness = false
 
+[profile.bench]
+debug = true
+
 [package.metadata.docs.rs]
 # all-features = true
 # default-target = "thumbv6m-none-eabi"

@@ -55,6 +55,7 @@ fn from_str(c: &mut Criterion) {
     group.bench_with_input("Uuid::from_str(upper hex)", input, |b, i| {
         b.iter(|| Uuid_::from_str(i))
     });
+    group.finish();
 }
 
 fn to_str(c: &mut Criterion) {
