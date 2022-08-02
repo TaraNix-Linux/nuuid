@@ -323,9 +323,9 @@ impl Uuid {
     ///
     /// ```rust
     /// # use nuuid::Uuid;
-    /// # let uuid = Uuid::new_v4();
+    /// let uuid = Uuid::new_v4();
     /// let mut buf = [0u8; 36];
-    /// uuid.to_str(&mut buf);
+    /// let string = uuid.to_str(&mut buf);
     /// ```
     ///
     /// With a slice
@@ -333,23 +333,22 @@ impl Uuid {
     /// ```rust
     /// # use nuuid::Uuid;
     /// # use std::convert::TryInto;
-    /// # let uuid = Uuid::new_v4();
-    /// # let mut data = [0u8; 50];
-    /// #
-    /// let buf: &mut [u8] = &mut data;
-    /// uuid.to_str((&mut buf[..36]).try_into().unwrap());
+    /// let uuid = Uuid::new_v4();
+    /// let mut data = [0u8; 50];
+    /// let string = uuid.to_str((&mut data[..36]).try_into().unwrap());
     /// ```
     ///
     /// With a slice, incorrectly.
     ///
+    /// The problem here is that the slices length is unconstrained, and could
+    /// be more or less than 36.
+    ///
     /// ```rust,should_panic
     /// # use nuuid::Uuid;
     /// # use std::convert::TryInto;
-    /// # let uuid = Uuid::new_v4();
-    /// # let mut data = [0u8; 50];
-    /// #
-    /// let buf: &mut [u8] = &mut data;
-    /// uuid.to_str(buf.try_into().unwrap());
+    /// let uuid = Uuid::new_v4();
+    /// let mut data = [0u8; 50];
+    /// let string = uuid.to_str((&mut data[..]).try_into().unwrap());
     /// ```
     pub fn to_str(self, buf: &mut [u8; 36]) -> &mut str {
         let bytes = self.to_bytes();
