@@ -1,5 +1,4 @@
-#![allow(dead_code)]
-use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion, Throughput};
+use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use nuuid::{Rng, Uuid};
 use std::str::FromStr;
 use uuid_::{Builder, Uuid as Uuid_};
@@ -82,58 +81,6 @@ fn to_str(c: &mut Criterion) {
     });
 }
 
-#[allow(unused_variables)]
-fn inline(c: &mut Criterion) {
-    let mut group = c.benchmark_group("inline");
-    let uuid = Uuid::new_v4();
-    let nil = Uuid::nil();
-    group.bench_function("Debug", |b| b.iter(|| format!("{:?}", uuid)));
-    // group.bench_function("UpperHex", |b| b.iter(|| format!("{:X}", uuid)));
-    // group.bench_function("LowerHex", |b| b.iter(|| format!("{:x}", uuid)));
-    // group.bench_function("variant", |b| b.iter(|| uuid.variant()));
-    // group.bench_function("version", |b| b.iter(|| uuid.version()));
-    // group.bench_function("non-nil", |b| b.iter(|| uuid.is_nil()));
-    // group.bench_function("nil", |b| b.iter(|| nil.is_nil()));
-    // group.bench_function("to_bytes", |b| b.iter(|| nil.to_bytes()));
-    // group.bench_function("to_bytes_me", |b| b.iter(|| nil.to_bytes_me()));
-    // group.bench_function("to_str", |b| {
-    //     b.iter_batched_ref(
-    //         || [0; 36],
-    //         |buf| {
-    //             nil.to_str(buf);
-    //         },
-    //         BatchSize::SmallInput,
-    //     )
-    // });
-    // group.bench_function("to_urn", |b| {
-    //     b.iter_batched_ref(
-    //         || [0; 45],
-    //         |buf| {
-    //             nil.to_urn(buf);
-    //         },
-    //         BatchSize::SmallInput,
-    //     )
-    // });
-    // group.bench_function("to_urn_upper", |b| {
-    //     b.iter_batched_ref(
-    //         || [0; 45],
-    //         |buf| {
-    //             nil.to_urn_upper(buf);
-    //         },
-    //         BatchSize::SmallInput,
-    //     )
-    // });
-    // group.bench_function("to_str_upper", |b| {
-    //     b.iter_batched_ref(
-    //         || [0; 36],
-    //         |buf| {
-    //             nil.to_str_upper(buf);
-    //         },
-    //         BatchSize::SmallInput,
-    //     )
-    // });
-}
-
 fn variant(c: &mut Criterion) {
     let mut group = c.benchmark_group("UUIDs Variant");
     group.throughput(Throughput::Elements(1));
@@ -162,6 +109,6 @@ fn version(c: &mut Criterion) {
 
 criterion_group!(
     benches, //
-    new_v4, new_v5, from_str, to_str, inline, variant, version
+    new_v4, new_v5, from_str, to_str, variant, version
 );
 criterion_main!(benches);
