@@ -10,6 +10,8 @@ use sha1::Sha1;
 
 const UUID_STR_LENGTH: usize = 36;
 const UUID_URN_LENGTH: usize = 45;
+const UUID_BRACED_LENGTH: usize = 38;
+const UUID_SIMPLE_LENGTH: usize = 32;
 const UUID_URN: &str = "urn:uuid:";
 
 /// The predefined DNS namespace, 6ba7b810-9dad-11d1-80b4-00c04fd430c8.
@@ -385,7 +387,12 @@ impl Uuid {
 impl Uuid {
     /// Parse a [`Uuid`] from a string
     ///
-    /// Case insensitive and supports "urn:uuid:"
+    /// This method is case insensitive and supports the following formats:
+    ///
+    /// - `urn:uuid:` `urn:uuid:662aa7c7-7598-4d56-8bcc-a72c30f998a2`
+    /// - "Braced" `{662aa7c7-7598-4d56-8bcc-a72c30f998a2}`
+    /// - "Hyphenate" `662aa7c7-7598-4d56-8bcc-a72c30f998a2`
+    /// - "Simple" `662aa7c775984d568bcca72c30f998a2`
     ///
     /// # Example
     ///
@@ -396,6 +403,12 @@ impl Uuid {
     ///
     /// Uuid::parse("urn:uuid:662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
     /// Uuid::parse("urn:uuid:662AA7C7-7598-4D56-8BCC-A72C30F998A2").unwrap();
+    ///
+    /// Uuid::parse("662aa7c775984d568bcca72c30f998a2").unwrap();
+    /// Uuid::parse("662AA7C775984D568BCCA72C30F998A2").unwrap();
+    ///
+    /// Uuid::parse("{662aa7c7-7598-4d56-8bcc-a72c30f998a2}").unwrap();
+    /// Uuid::parse("{662AA7C7-7598-4D56-8BCC-A72C30F998A2}").unwrap();
     /// ```
     #[inline]
     pub fn parse(s: &str) -> Result<Self, ParseUuidError> {
@@ -501,39 +514,54 @@ impl FromStr for Uuid {
     type Err = ParseUuidError;
 
     fn from_str(mut s: &str) -> Result<Self, Self::Err> {
-        if s.len() == UUID_URN_LENGTH {
-            s = &s[UUID_URN.len()..];
-        }
-        if s.len() != UUID_STR_LENGTH {
+        // Error if greater than max parsable length, or less than shortest
+        if s.len() > UUID_URN_LENGTH || s.len() < UUID_SIMPLE_LENGTH || !s.is_ascii() {
             return Err(ParseUuidError);
         }
+        // Amount to offset indexing by, to account for "Simple"
+        let mut offset = 0;
+
+        s = match s.len() {
+            UUID_URN_LENGTH => &s[UUID_URN.len()..],
+            UUID_BRACED_LENGTH => &s[1..s.len() - 1],
+            UUID_STR_LENGTH => s,
+            UUID_SIMPLE_LENGTH => {
+                offset = 1;
+                s
+            }
+            _ => return Err(ParseUuidError),
+        };
         let mut raw = [0; 16];
         let buf: &mut [u8] = &mut raw;
         // "00000000-0000-0000-0000-000000000000"
         //          9    14   19   24
         // - 1
+        // "00000000000000000000000000000000"
+        //          9   13  17  21
+        // - 1
+
         buf[..4].copy_from_slice(
             &u32::from_str_radix(&s[..8], 16)
                 .or(Err(ParseUuidError))?
                 .to_be_bytes(),
         );
         buf[4..][..2].copy_from_slice(
-            &u16::from_str_radix(&s[9..13], 16)
+            &u16::from_str_radix(&s[9 - offset..13 - offset], 16)
                 .or(Err(ParseUuidError))?
                 .to_be_bytes(),
         );
         buf[6..][..2].copy_from_slice(
-            &u16::from_str_radix(&s[14..18], 16)
+            &u16::from_str_radix(&s[14 - (offset * 2)..18 - (offset * 2)], 16)
                 .or(Err(ParseUuidError))?
                 .to_be_bytes(),
         );
         buf[8..][..2].copy_from_slice(
-            &u16::from_str_radix(&s[19..23], 16)
+            &u16::from_str_radix(&s[19 - (offset * 3)..23 - (offset * 3)], 16)
                 .or(Err(ParseUuidError))?
                 .to_be_bytes(),
         );
         buf[10..].copy_from_slice(
-            &u64::from_str_radix(&s[24..], 16)
+            &u64::from_str_radix(&s[24 - (offset * 4)..], 16)
                 .or(Err(ParseUuidError))?
                 .to_be_bytes()[2..],
         );
@@ -627,6 +655,8 @@ mod tests {
 
     const UUID_NIL: &str = "00000000-0000-0000-0000-000000000000";
     const UUID_V4: &str = "662aa7c7-7598-4d56-8bcc-a72c30f998a2";
+    const UUID_V4_SIMPLE: &str = "662aa7c775984d568bcca72c30f998a2";
+    const UUID_V4_BRACED: &str = "{662aa7c7-7598-4d56-8bcc-a72c30f998a2}";
     const UUID_V4_URN: &str = "urn:uuid:662aa7c7-7598-4d56-8bcc-a72c30f998a2";
     const UUID_V4_URN_UPPER: &str = "urn:uuid:662AA7C7-7598-4D56-8BCC-A72C30F998A2";
     const RAW: [u8; 16] = [
@@ -681,10 +711,20 @@ mod tests {
 
     #[test]
     fn parse_string() {
-        let uuid = Uuid::from_str(UUID_V4).unwrap();
-        assert_eq!(RAW, uuid.to_bytes(), "Parsed UUID bytes don't match");
-        let uuid = Uuid::from_str(UUID_V4_URN).unwrap();
-        assert_eq!(RAW, uuid.to_bytes(), "Parsed UUID bytes don't match");
+        let test = &[UUID_V4, UUID_V4_URN, UUID_V4_BRACED, UUID_V4_SIMPLE];
+        for uuid in test {
+            println!("Source UUID: {}", uuid);
+            let uuid = Uuid::from_str(&uuid.to_ascii_lowercase()).unwrap();
+            println!("Parsed UUID: {}\n", uuid);
+            assert_eq!(RAW, uuid.to_bytes(), "Parsed UUID bytes don't match");
+        }
+
+        for uuid in test {
+            println!("Source UUID: {}", uuid);
+            let uuid = Uuid::from_str(&uuid.to_ascii_uppercase()).unwrap();
+            println!("Parsed UUID: {}\n", uuid);
+            assert_eq!(RAW, uuid.to_bytes(), "Parsed UUID bytes don't match");
+        }
     }
 
     #[test]
