@@ -1,18 +1,33 @@
 #![allow(dead_code)]
 use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion, Throughput};
-use nuuid::Uuid;
+use nuuid::{Rng, Uuid};
 use std::str::FromStr;
-use uuid_::Uuid as Uuid_;
+use uuid_::{Builder, Uuid as Uuid_};
 
 fn new_v4(c: &mut Criterion) {
-    let mut group = c.benchmark_group("new_v4");
+    let mut group = c.benchmark_group("default vs default");
     group.throughput(Throughput::Elements(1));
+    let mut rng = Rng::new();
 
     // NOTE: The uuid crate uses getrandom directly
     // Nuuid uses it through rand's `OsRng`
 
-    group.bench_function("Nuuid", |b| b.iter(Uuid::new_v4));
-    group.bench_function("Uuid", |b| b.iter(Uuid_::new_v4));
+    group.bench_function("Nuuid::new_v4", |b| b.iter(Uuid::new_v4));
+    group.bench_function("Nuuid::new_v4_rng", |b| {
+        b.iter(|| Uuid::new_v4_rng(&mut rng))
+    });
+
+    group.bench_function("Uuid::new_v4", |b| b.iter(Uuid_::new_v4));
+    // NOTE: Justification for this comparison vs new_v4_rng is that
+    // the uuid crate is incapable of doing it as new_v4_rng does.
+    group.bench_function("Builder::from_random_bytes", |b| {
+        b.iter(|| {
+            use rand::RngCore;
+            let mut bytes = [0u8; 16];
+            rand::rngs::OsRng.fill_bytes(&mut bytes);
+            Builder::from_random_bytes(bytes)
+        })
+    });
 }
 
 fn new_v5(c: &mut Criterion) {
