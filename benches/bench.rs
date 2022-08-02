@@ -1,20 +1,18 @@
 #![allow(dead_code)]
 use criterion::{black_box, criterion_group, criterion_main, BatchSize, Criterion, Throughput};
-use nuuid::{Rng, Uuid};
+use nuuid::Uuid;
 use std::str::FromStr;
 use uuid_::Uuid as Uuid_;
 
 fn new_v4(c: &mut Criterion) {
-    let mut rng = Rng::new();
     let mut group = c.benchmark_group("new_v4");
     group.throughput(Throughput::Elements(1));
 
-    group.bench_function("Nuuid", |b| b.iter(|| Uuid::new_v4_rng(&mut rng)));
+    // NOTE: The uuid crate uses getrandom directly
+    // Nuuid uses it through rand's `OsRng`
 
-    // NOTE: This uses thread_rng, whereas our new_v4 is new each time.
-    // So our bench above uses new_v4_rng, which is local and seeded once at the
-    // start by OsRng, similar to thread_rng.
-    group.bench_function("Uuid_", |b| b.iter(Uuid_::new_v4));
+    group.bench_function("Nuuid", |b| b.iter(Uuid::new_v4));
+    group.bench_function("Uuid", |b| b.iter(Uuid_::new_v4));
 }
 
 fn new_v5(c: &mut Criterion) {
