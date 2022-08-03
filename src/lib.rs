@@ -190,7 +190,7 @@ impl Uuid {
     #[inline]
     fn set_version(&mut self, ver: Version) {
         // `Version` enum matches version layout
-        self.0[6] = (self.0[6] & 0x0F) | ((ver as u8) << 4);
+        self.0[6] = (self.0[6] & 0xF) | ((ver as u8) << 4);
     }
 
     /// Set the UUID Variant, only touching bits as specified.
@@ -619,6 +619,49 @@ impl Uuid {
         uuid
     }
 
+    /// Create a new Version 1 UUID using the provided 60-bit timestamp,
+    /// 14-bit counter, and node.
+    ///
+    /// The 4 high bits of `timestamp` are ignored
+    ///
+    /// The 2 high bits of `counter` are ignored
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use nuuid::{NAMESPACE_DNS, Uuid};
+    /// # let (TIMESTAMP, RANDOM, RANDOM_OR_MAC) = (0, 0, [0; 6]);
+    /// let uuid = Uuid::new_v1(TIMESTAMP, RANDOM, RANDOM_OR_MAC);
+    /// ```
+    #[inline]
+    pub fn new_v1(timestamp: u64, counter: u16, node: [u8; 6]) -> Self {
+        let timestamp = timestamp.to_be_bytes();
+        let counter = counter.to_be_bytes();
+        Uuid::from_bytes([
+            // time_low
+            timestamp[4],
+            timestamp[5],
+            timestamp[6],
+            timestamp[7],
+            // time_mid
+            timestamp[2],
+            timestamp[3],
+            // time_hi Version, ignore highest 4 bits, skip `set_version` and set the version
+            (timestamp[0] & 0xF) | (1u8 << 4),
+            timestamp[1],
+            // clock_seq_hi Variant, skip `set_variant` and set the variant
+            (counter[0] & 0x3F) | 0x80,
+            counter[1],
+            // Node
+            node[0],
+            node[1],
+            node[2],
+            node[3],
+            node[4],
+            node[5],
+        ])
+    }
+
     /// Create a new Version 8 UUID
     ///
     /// This will set the version and variant bits as needed,
@@ -633,7 +676,7 @@ impl Uuid {
     #[inline]
     #[cfg(feature = "experimental_uuid")]
     pub fn new_v8(bytes: Bytes) -> Self {
-        let mut uuid = Self(bytes);
+        let mut uuid = Uuid::from_bytes(bytes);
         uuid.set_variant(Variant::Rfc4122);
         uuid.set_version(Version::Vendor);
         uuid
@@ -868,6 +911,20 @@ mod tests {
     }
 
     #[test]
+    fn time() {
+        use uuid_::{v1::*, Uuid as Uuid_};
+        let (ticks, counter, node) = (138788330336896890u64, 8648, *b"world!");
+
+        dbg!(ticks.to_be_bytes());
+
+        let uuid = Uuid::new_v1(ticks, counter, node);
+        let uuid_ = Uuid_::new_v1(Timestamp::from_rfc4122(ticks, counter), &node);
+        assert_eq!(uuid.to_bytes(), *uuid_.as_bytes());
+        assert_eq!(uuid.version(), Version::Time);
+        assert_eq!(uuid.variant(), Variant::Rfc4122);
+    }
+
+    #[test]
     fn md5() {
         name(Uuid::new_v3, Version::Md5);
         let uuid = Uuid::new_v3(NAMESPACE_DNS, b"www.widgets.com");
@@ -983,14 +1040,10 @@ mod tests {
 
     #[test]
     fn timestamp() {
-        let bytes = *uuid_::Uuid::new_v1(
-            uuid_::v1::Timestamp::from_rfc4122(12345678, 12345),
-            b"654321",
-        )
-        .as_bytes();
+        let (ticks, counter, node) = (138788330336896890u64, 8648, *b"world!");
 
-        let uuid = Uuid::from_bytes(bytes);
-        let uuid_ = uuid_::Uuid::from_bytes(bytes);
+        let uuid = Uuid::new_v1(ticks, counter, node);
+        let uuid_ = uuid_::Uuid::new_v1(uuid_::v1::Timestamp::from_rfc4122(ticks, counter), &node);
         assert_eq!(
             uuid.timestamp(),
             uuid_.get_timestamp().unwrap().to_rfc4122().0

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `Uuid::timestamp` and `Uuid::clock_sequence`
+- UUID Version 1 support, `Uuid::new_v1`
 
 ## [0.4.1] - 2022-08-03
 

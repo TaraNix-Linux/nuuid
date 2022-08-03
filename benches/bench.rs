@@ -173,6 +173,20 @@ fn timestamp(c: &mut Criterion) {
     group.finish();
 }
 
+fn new_v1(c: &mut Criterion) {
+    let mut group = c.benchmark_group("Generating new_v1 UUIDs");
+    group.throughput(Throughput::Elements(1));
+
+    let (ticks, counter, node) = (138788330336896890u64, 8648, *b"world!");
+
+    group.bench_function("Nuuid::new_v1", |b| {
+        b.iter(|| Uuid::new_v1(ticks, counter, node))
+    });
+    group.bench_function("Uuid::new_v1", |b| {
+        b.iter(|| Uuid_::new_v1(Timestamp::from_rfc4122(ticks, counter), &node))
+    });
+}
+
 criterion_group!(
     benches, //
     new_v4,
@@ -183,6 +197,7 @@ criterion_group!(
     version,
     mixed_endian,
     is_nil,
-    timestamp
+    timestamp,
+    new_v1
 );
 criterion_main!(benches);
