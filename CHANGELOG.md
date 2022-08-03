@@ -13,6 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Uuid::timestamp` and `Uuid::clock_sequence`
 - UUID Version 1 support, `Uuid::new_v1`
+- impl `Display` on `Version` and `Variant`
+
+### Changed
+
+- `Uuid` alternate `Debug` representation now includes version number
+
+### Fixed
+
+- `Uuid` `Debug` representation of `Version`
+- `Uuid` `Debug` representation on `no_std`
 
 ## [0.4.1] - 2022-08-03
 

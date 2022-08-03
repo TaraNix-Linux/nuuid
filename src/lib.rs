@@ -123,6 +123,17 @@ pub enum Variant {
     Reserved,
 }
 
+impl fmt::Display for Variant {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Variant::Ncs => write!(f, "Ncs"),
+            Variant::Rfc4122 => write!(f, "Rfc4122"),
+            Variant::Microsoft => write!(f, "Microsoft"),
+            Variant::Reserved => write!(f, "Reserved"),
+        }
+    }
+}
+
 /// UUID Version
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 #[non_exhaustive]
@@ -156,6 +167,26 @@ pub enum Version {
     /// Version 8, experimental or vendor specific format
     #[cfg(feature = "experimental_uuid")]
     Vendor,
+}
+
+impl fmt::Display for Version {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Version::Nil => write!(f, "Nil"),
+            Version::Time => write!(f, "Time"),
+            Version::Dce => write!(f, "Dce"),
+            Version::Md5 => write!(f, "Md5"),
+            Version::Random => write!(f, "Random"),
+            Version::Sha1 => write!(f, "Sha1"),
+
+            #[cfg(feature = "experimental_uuid")]
+            Version::Database => write!(f, "Database"),
+            #[cfg(feature = "experimental_uuid")]
+            Version::UnixTime => write!(f, "UnixTime"),
+            #[cfg(feature = "experimental_uuid")]
+            Version::Vendor => write!(f, "Vendor"),
+        }
+    }
 }
 
 /// Error parsing UUID
@@ -800,11 +831,18 @@ impl fmt::Display for Uuid {
 impl fmt::Debug for Uuid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if f.alternate() {
-            f.debug_struct("Uuid")
-                .field("String", &format!("{:X}", self))
-                .field("Version", &self.version())
-                .field("Variant", &self.variant())
-                .finish()
+            write!(
+                f,
+                r#"Uuid({:X}) {{
+    Version: {}({})
+    Variant: {}({})
+}}"#,
+                self,
+                self.version(),
+                self.version() as u8,
+                self.variant(),
+                self.variant() as u8
+            )
         } else {
             write!(f, "Uuid({:X})", self)
         }
