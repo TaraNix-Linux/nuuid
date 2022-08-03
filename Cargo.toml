@@ -35,6 +35,10 @@ std = []
 # This can be used in no_std environments, but usually requires OS system libraries.
 getrandom = ["rand_core/getrandom"]
 
+# Enable experimental UUID formats from https://github.com/uuid6/uuid6-ietf-draft
+# There is no stability guarantee for these formats and API or output may change when the draft does
+experimental_uuid = []
+
 [[bench]]
 name = "bench"
 harness = false

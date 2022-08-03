@@ -144,6 +144,18 @@ pub enum Version {
 
     /// Version 5, SHA-1 name based.
     Sha1,
+
+    /// Version 6, re-ordered version of [`Version::time`] for DB locality.
+    #[cfg(feature = "experimental_uuid")]
+    Database,
+
+    /// Version 7, unix time based.
+    #[cfg(feature = "experimental_uuid")]
+    UnixTime,
+
+    /// Version 8, experimental or vendor specific format
+    #[cfg(feature = "experimental_uuid")]
+    Vendor,
 }
 
 /// Error parsing UUID
@@ -230,6 +242,13 @@ impl Uuid {
     #[inline]
     pub const fn nil() -> Self {
         Uuid([0; 16])
+    }
+
+    /// The special Max UUID, where all bits are set to one.
+    #[inline]
+    #[cfg(feature = "experimental_uuid")]
+    pub const fn max() -> Self {
+        Uuid([1; 16])
     }
 
     /// Create a UUID from bytes.
