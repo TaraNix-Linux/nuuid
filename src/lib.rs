@@ -234,17 +234,18 @@ impl Uuid {
 
     /// Create a UUID from mixed-endian bytes.
     ///
-    /// # Note
+    /// The resulting UUID will be stored in-memory as big-endian.
     ///
-    /// This is primarily for compatibility with version 2 UUID's,
-    /// which use a mixed-endian format where the
-    /// first three fields are little-endian.
+    /// This will primarily come up when interacting with Microsoft GUIDs/UUIDs
     ///
-    /// Common modern use of this format is found in Microsoft GUID's
-    /// and UEFI UUID's.
+    /// The following fields are expected to be little-endian instead of
+    /// big-endian:
     ///
-    /// Despite not being per spec, such UUIDs still claim to be version 4,
-    /// however.
+    /// - `time_low`
+    /// - `time_mid`
+    /// - `time_hi_and_version`
+    ///
+    /// Other fields are left unchanged
     #[inline]
     pub fn from_bytes_me(bytes: Bytes) -> Self {
         Self(bytes).swap_endian()
@@ -271,7 +272,7 @@ impl Uuid {
     /// Many UUIDs out in the wild are incorrectly generated,
     /// so this value can't be relied upon.
     #[inline]
-    pub fn variant(self) -> Variant {
+    pub const fn variant(self) -> Variant {
         let byte = self.0[8];
         // Check the highest 3 bits
         match (
@@ -296,7 +297,7 @@ impl Uuid {
     /// Many UUIDs out in the wild are incorrectly generated,
     /// so this value can't be relied upon.
     #[inline]
-    pub fn version(self) -> Version {
+    pub const fn version(self) -> Version {
         // Check the highest 4 bits
         match (
             self.0[6] >> 7 & 1 == 1,
@@ -442,6 +443,20 @@ impl Uuid {
         Uuid::from_str(s)
     }
 
+    /// Parse a [`Uuid`] from a string that is in mixed-endian
+    ///
+    /// This method is bad and should never be needed, but there are UUIDs in
+    /// the wild that do this.
+    ///
+    /// These UUIDs are being displayed wrong, but you still need to parse them
+    /// correctly.
+    ///
+    /// See [`Uuid::from_bytes_me`] for details.
+    #[inline]
+    pub fn parse_me(s: &str) -> Result<Self, ParseUuidError> {
+        Uuid::from_str(s).map(Uuid::swap_endian)
+    }
+
     /// Create a new Version 4(Random) UUID.
     ///
     /// This requires the `getrandom` feature.
@@ -540,6 +555,7 @@ impl Uuid {
 impl FromStr for Uuid {
     type Err = ParseUuidError;
 
+    /// See [`Uuid::parse`] for details.
     #[inline]
     fn from_str(mut s: &str) -> Result<Self, Self::Err> {
         // Error if greater than max parsable length, or less than shortest
@@ -632,9 +648,34 @@ impl fmt::Display for Uuid {
     }
 }
 
+/// Display the [`Uuid`] debug representation
+///
+/// The alternate(`#`) flag can be used to get more more detailed debug
+/// information.
+///
+/// # Example
+///
+/// ```rust
+/// # use nuuid::Uuid;
+/// let uuid = Uuid::parse("662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
+/// assert_eq!(format!("{:?}", uuid), "Uuid(662AA7C7-7598-4D56-8BCC-A72C30F998A2)");
+/// assert_eq!(format!("{:#?}", uuid), r#"Uuid {
+///     String: "662AA7C7-7598-4D56-8BCC-A72C30F998A2",
+///     Version: Random,
+///     Variant: Rfc4122,
+/// }"#);
+/// ```
 impl fmt::Debug for Uuid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Uuid({:X})", self)
+        if f.alternate() {
+            f.debug_struct("Uuid")
+                .field("String", &format!("{:X}", self))
+                .field("Version", &self.version())
+                .field("Variant", &self.variant())
+                .finish()
+        } else {
+            write!(f, "Uuid({:X})", self)
+        }
     }
 }
 
