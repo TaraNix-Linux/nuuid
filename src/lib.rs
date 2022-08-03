@@ -953,13 +953,21 @@ mod tests {
         use uuid_::{v1::*, Uuid as Uuid_};
         let (ticks, counter, node) = (138788330336896890u64, 8648, *b"world!");
 
-        dbg!(ticks.to_be_bytes());
-
         let uuid = Uuid::new_v1(ticks, counter, node);
         let uuid_ = Uuid_::new_v1(Timestamp::from_rfc4122(ticks, counter), &node);
         assert_eq!(uuid.to_bytes(), *uuid_.as_bytes());
         assert_eq!(uuid.version(), Version::Time);
         assert_eq!(uuid.variant(), Variant::Rfc4122);
+
+        assert_eq!(
+            uuid.timestamp(),
+            uuid_.get_timestamp().unwrap().to_rfc4122().0
+        );
+        assert_eq!(
+            uuid.clock_sequence(),
+            uuid_.get_timestamp().unwrap().to_rfc4122().1
+        );
+        assert_eq!(uuid.node()[..], uuid_.as_fields().3[2..]);
     }
 
     #[test]
@@ -1074,21 +1082,5 @@ mod tests {
             assert_eq!(uuid.version(), Version::Random);
             assert_eq!(uuid.variant(), Variant::Rfc4122);
         }
-    }
-
-    #[test]
-    fn timestamp() {
-        let (ticks, counter, node) = (138788330336896890u64, 8648, *b"world!");
-
-        let uuid = Uuid::new_v1(ticks, counter, node);
-        let uuid_ = uuid_::Uuid::new_v1(uuid_::v1::Timestamp::from_rfc4122(ticks, counter), &node);
-        assert_eq!(
-            uuid.timestamp(),
-            uuid_.get_timestamp().unwrap().to_rfc4122().0
-        );
-        assert_eq!(
-            uuid.clock_sequence(),
-            uuid_.get_timestamp().unwrap().to_rfc4122().1
-        );
     }
 }
