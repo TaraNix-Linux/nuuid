@@ -128,6 +128,23 @@ fn mixed_endian(c: &mut Criterion) {
     group.finish();
 }
 
+fn is_nil(c: &mut Criterion) {
+    let mut group = c.benchmark_group("UUIDs is_nil");
+    group.throughput(Throughput::Elements(1));
+    let uuid = Uuid::new_v4();
+    let uuid_ = Uuid_::new_v4();
+
+    group.bench_function("Nuuid::is_nil", |b| {
+        b.iter(|| uuid.is_nil());
+    });
+
+    group.bench_function("Uuid::is_nil", |b| {
+        b.iter(|| uuid_.is_nil());
+    });
+
+    group.finish();
+}
+
 criterion_group!(
     benches, //
     new_v4,
@@ -136,6 +153,7 @@ criterion_group!(
     to_str,
     variant,
     version,
-    mixed_endian
+    mixed_endian,
+    is_nil
 );
 criterion_main!(benches);

@@ -273,8 +273,8 @@ impl Uuid {
 
     /// Returns true if the UUID is nil.
     #[inline]
-    pub fn is_nil(self) -> bool {
-        self.0 == Self::nil().0
+    pub const fn is_nil(self) -> bool {
+        u128::from_be_bytes(self.0) == 0
     }
 
     /// The UUID Variant
