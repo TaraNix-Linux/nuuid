@@ -23,7 +23,7 @@ rand_core = { version = "0.6.3", default-features = false }
 
 [dev-dependencies]
 criterion = { version = "0.3.6", features = ["html_reports"] }
-uuid_ = { version = "1.1.2", package = "uuid", features = ["v4", "v5"] }
+uuid_ = { version = "1.1.2", package = "uuid", features = ["v4", "v5", "v1"] }
 
 [features]
 default = ["getrandom", "std"]

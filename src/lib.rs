@@ -346,6 +346,43 @@ impl Uuid {
         }
     }
 
+    /// The 60-bit UUID timestamp
+    ///
+    /// This value will only make sense for [`Version::Time`] or
+    /// [`Version::Database`] UUIDs
+    ///
+    /// The value of this will depend on [`Uuid::version`]
+    #[inline]
+    pub const fn timestamp(self) -> u64 {
+        u64::from_be_bytes([
+            // Clear version bits
+            self.0[6] & 0xF,
+            self.0[7],
+            self.0[4],
+            self.0[5],
+            self.0[0],
+            self.0[1],
+            self.0[2],
+            self.0[3],
+        ])
+    }
+
+    /// The 14-bit UUID clock sequence
+    ///
+    /// This value will only make sense for [`Version::Time`] or
+    /// [`Version::Database`] UUIDs
+    ///
+    /// The value of this will depend on [`Uuid::version`]
+    #[inline]
+    pub const fn clock_sequence(self) -> u16 {
+        u16::from_be_bytes([
+            // Clear variant bits
+            // Only need to clear two because this only makes sense for RFC UUIDs
+            self.0[8] & 0x3F,
+            self.0[9],
+        ])
+    }
+
     /// Write UUID as a lowercase ASCII string into `buf`, and returns it as a
     /// string.
     ///
@@ -921,5 +958,25 @@ mod tests {
             assert_eq!(uuid.version(), Version::Random);
             assert_eq!(uuid.variant(), Variant::Rfc4122);
         }
+    }
+
+    #[test]
+    fn timestamp() {
+        let bytes = *uuid_::Uuid::new_v1(
+            uuid_::v1::Timestamp::from_rfc4122(12345678, 12345),
+            b"654321",
+        )
+        .as_bytes();
+
+        let uuid = Uuid::from_bytes(bytes);
+        let uuid_ = uuid_::Uuid::from_bytes(bytes);
+        assert_eq!(
+            uuid.timestamp(),
+            uuid_.get_timestamp().unwrap().to_rfc4122().0
+        );
+        assert_eq!(
+            uuid.clock_sequence(),
+            uuid_.get_timestamp().unwrap().to_rfc4122().1
+        );
     }
 }

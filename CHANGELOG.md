@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- `Uuid::timestamp` and `Uuid::clock_sequence`
+
 ## [0.4.1] - 2022-08-03
 
 ### Added

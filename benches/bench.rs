@@ -2,7 +2,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughpu
 use nuuid::{Rng, Uuid};
 use rand_chacha::rand_core::{OsRng, RngCore};
 use std::str::FromStr;
-use uuid_::{Builder, Uuid as Uuid_};
+use uuid_::{v1::Timestamp, Builder, Uuid as Uuid_};
 
 fn new_v4(c: &mut Criterion) {
     let mut group = c.benchmark_group("Generating new_v4 UUIDs");
@@ -145,6 +145,34 @@ fn is_nil(c: &mut Criterion) {
     group.finish();
 }
 
+fn timestamp(c: &mut Criterion) {
+    let mut group = c.benchmark_group("UUIDs timestamp");
+    group.throughput(Throughput::Elements(1));
+    let time = Timestamp::from_rfc4122(12345678, 12345);
+    let bytes = *Uuid_::new_v1(time, b"654321").as_bytes();
+    let uuid = Uuid::from_bytes(bytes);
+    let uuid_ = Uuid_::from_bytes(bytes);
+
+    group.bench_function("Nuuid::timestamp", |b| {
+        b.iter(|| uuid.timestamp());
+    });
+    group.bench_function("Nuuid::clock_sequence", |b| {
+        b.iter(|| uuid.timestamp());
+    });
+    group.bench_function("Nuuid::timestamp|clock_sequence", |b| {
+        b.iter(|| {
+            black_box(uuid.timestamp());
+            black_box(uuid.clock_sequence());
+        });
+    });
+
+    group.bench_function("Uuid::get_timestamp", |b| {
+        b.iter(|| uuid_.get_timestamp());
+    });
+
+    group.finish();
+}
+
 criterion_group!(
     benches, //
     new_v4,
@@ -154,6 +182,7 @@ criterion_group!(
     variant,
     version,
     mixed_endian,
-    is_nil
+    is_nil,
+    timestamp
 );
 criterion_main!(benches);
