@@ -589,6 +589,7 @@ impl Uuid {
     /// # use nuuid::{NAMESPACE_DNS, Uuid};
     /// let uuid = Uuid::new_v3(NAMESPACE_DNS, b"example.com");
     /// ```
+    #[inline]
     pub fn new_v3(namespace: Uuid, name: &[u8]) -> Self {
         let mut hasher = Md5::new();
         hasher.update(namespace.to_bytes());
