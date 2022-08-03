@@ -414,6 +414,14 @@ impl Uuid {
         ])
     }
 
+    /// The 48-bit UUID Node ID
+    #[inline]
+    pub const fn node(self) -> [u8; 6] {
+        [
+            self.0[10], self.0[11], self.0[12], self.0[13], self.0[14], self.0[15],
+        ]
+    }
+
     /// Write UUID as a lowercase ASCII string into `buf`, and returns it as a
     /// string.
     ///

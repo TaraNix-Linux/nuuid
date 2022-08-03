@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `Uuid::timestamp` and `Uuid::clock_sequence`
+- `Uuid::timestamp`, `Uuid::clock_sequence`, `Uuid::node`
 - UUID Version 1 support, `Uuid::new_v1`
 - impl `Display` on `Version` and `Variant`
 
