@@ -22,14 +22,14 @@ Do not assume people can tell if they've been altered at a glance. They can't.
 
 ```toml
 [dependencies]
-nuuid = "0.4.0"
+nuuid = "0.4.1"
 ```
 
 `no_std` support:
 
 ```toml
 [dependencies]
-nuuid = "0.4.0"
+nuuid = "0.4.1"
 ```
 
 ### Dependencies
