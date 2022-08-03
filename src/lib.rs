@@ -205,10 +205,22 @@ impl Uuid {
 
     /// Swap the in-memory format between big-endian and mixed-endian.
     #[inline]
-    fn swap_endian(mut self) -> Self {
-        self.0[0..4].reverse();
-        self.0[4..6].reverse();
-        self.0[6..8].reverse();
+    const fn swap_endian(mut self) -> Self {
+        // TODO: Const slice reverse pls. or const mem::swap.
+        let (a1, a2, a3, a4) = (self.0[0], self.0[1], self.0[2], self.0[3]);
+        self.0[0] = a4;
+        self.0[1] = a3;
+        self.0[2] = a2;
+        self.0[3] = a1;
+
+        let (a1, a2) = (self.0[4], self.0[5]);
+        self.0[4] = a2;
+        self.0[5] = a1;
+
+        let (a1, a2) = (self.0[6], self.0[7]);
+        self.0[6] = a2;
+        self.0[7] = a1;
+
         self
     }
 }
@@ -247,7 +259,7 @@ impl Uuid {
     ///
     /// Other fields are left unchanged
     #[inline]
-    pub fn from_bytes_me(bytes: Bytes) -> Self {
+    pub const fn from_bytes_me(bytes: Bytes) -> Self {
         Self(bytes).swap_endian()
     }
 
@@ -255,7 +267,7 @@ impl Uuid {
     ///
     /// See [`Uuid::from_bytes_me`] for details.
     #[inline]
-    pub fn to_bytes_me(self) -> Bytes {
+    pub const fn to_bytes_me(self) -> Bytes {
         self.swap_endian().to_bytes()
     }
 
@@ -859,6 +871,24 @@ mod tests {
         let uuid_le = Uuid::from_bytes_me(uuid_be.to_bytes_me());
         assert_eq!(uuid_le.version(), Version::Random);
         assert_eq!(uuid_le.variant(), Variant::Rfc4122);
+
+        assert_eq!(uuid_le, uuid_be);
+        assert_ne!(uuid_be.to_bytes_me(), uuid_be.to_bytes());
+
+        // Terrible UUID sourced from my partition table on Linux.
+        // Either Linux displays them wrong, or parted stores them wrong.
+        // Either way, its swapped.
+        const UUID: &str = "20169084-b186-884f-b110-3db2c37eb8b5";
+        let uuid = Uuid::parse_me(UUID).unwrap();
+        let bad_uuid = Uuid::parse(UUID).unwrap();
+
+        // Appears as nil because bits are invalid.
+        assert_eq!(bad_uuid.version(), Version::Nil);
+
+        assert_eq!(uuid.version(), Version::Random);
+        assert_eq!(uuid.variant(), Variant::Rfc4122);
+        // Cant be equal because endian
+        assert_ne!(uuid.to_str(&mut [0; 36]), UUID);
     }
 
     #[test]

@@ -107,8 +107,35 @@ fn version(c: &mut Criterion) {
     group.finish();
 }
 
+fn mixed_endian(c: &mut Criterion) {
+    let mut group = c.benchmark_group("UUIDs mixed-endian performance");
+    group.throughput(Throughput::Elements(1));
+    let input = Uuid::new_v4();
+    let bytes = input.to_bytes_me();
+
+    group.bench_function("Nuuid::from_bytes_me", |b| {
+        b.iter(|| Uuid::from_bytes_me(bytes));
+    });
+
+    group.bench_function("Nuuid::from_bytes", |b| {
+        b.iter(|| Uuid::from_bytes(bytes));
+    });
+
+    group.bench_function("Uuid::from_bytes_le", |b| {
+        b.iter(|| Uuid_::from_bytes_le(bytes));
+    });
+
+    group.finish();
+}
+
 criterion_group!(
     benches, //
-    new_v4, new_v5, from_str, to_str, variant, version
+    new_v4,
+    new_v5,
+    from_str,
+    to_str,
+    variant,
+    version,
+    mixed_endian
 );
 criterion_main!(benches);

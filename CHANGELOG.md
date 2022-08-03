@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Documented how `Uuid::from_bytes_me` works better
 - Documented `Uuid` `Debug` representation
-- `Uuid::version` and `Uuid::variant` are now `const fn`
+- `Uuid::version`, `Uuid::variant`, `Uuid::from_bytes_me`, and `Uuid::to_bytes_me` are now `const fn`
 
 ## [0.4.0] - 2022-08-02
 
