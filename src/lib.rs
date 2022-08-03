@@ -618,6 +618,26 @@ impl Uuid {
         uuid.set_variant(Variant::Rfc4122);
         uuid
     }
+
+    /// Create a new Version 8 UUID
+    ///
+    /// This will set the version and variant bits as needed,
+    /// and the input will otherwise be unchanged.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use nuuid::Uuid;
+    /// let uuid = Uuid::new_v8(b"I Am 16 bytes!!!");
+    /// ```
+    #[inline]
+    #[cfg(feature = "experimental_uuid")]
+    pub fn new_v8(bytes: Bytes) -> Self {
+        let mut uuid = Self(bytes);
+        uuid.set_variant(Variant::Rfc4122);
+        uuid.set_version(Version::Vendor);
+        uuid
+    }
 }
 
 /// See [`Uuid::parse`] for details.
