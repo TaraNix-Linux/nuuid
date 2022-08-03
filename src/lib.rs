@@ -714,10 +714,7 @@ mod tests {
     fn name(fun: fn(Uuid, &[u8]) -> Uuid, ver: Version) {
         let namespace = Uuid::new_v4();
         let namespace2 = Uuid::new_v4();
-        //
         let uuid1 = fun(namespace, b"test");
-        // Maybe don't?
-        std::thread::sleep(std::time::Duration::from_millis(500));
         let uuid2 = fun(namespace, b"test");
         assert_eq!(
             uuid1, uuid2,
