@@ -1,6 +1,6 @@
 [package]
 name = "nuuid"
-version = "0.4.4"
+version = "0.4.5"
 authors = ["Diana"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
