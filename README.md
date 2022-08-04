@@ -9,6 +9,13 @@ A New Uuid(nuuid) library for Rust
 
 A `no_std` library to create and use RFC 4122 UUID's in Rust.
 
+This library, through the experimental and ***semver unstable***,
+`experimental_uuid` cargo feature, supports UUID v6, v7, and v8.
+
+Details ***MAY*** change as the draft does.
+
+See the draft [New UUID Formats draft RFC](https://www.ietf.org/archive/id/draft-peabody-dispatch-new-uuid-format-04.html) for details.
+
 ## Security
 
 UUID's can be used without requiring a central authority,
