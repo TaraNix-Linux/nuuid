@@ -1,4 +1,4 @@
-# Contributing to Uuid
+# Contributing to Nuuid
 
 This project is not looking for external contributors at this time.
 
