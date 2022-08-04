@@ -352,7 +352,11 @@ impl Uuid {
 
     /// The UUID Version
     ///
-    /// If the version bits are invalid, [`Version::Nil`] is returned instead.
+    /// For "incorrect" or non-RFC UUIDs, this value may be nonsensical.
+    ///
+    /// If the version bits do not match any known version,
+    /// [`Version::Nil`] is returned instead.
+    /// As new versions are recognized, this may change.
     ///
     /// # Warning
     ///
@@ -373,6 +377,13 @@ impl Uuid {
             (false, false, true, true) => Version::Md5,
             (false, true, false, false) => Version::Random,
             (false, true, false, true) => Version::Sha1,
+
+            #[cfg(feature = "experimental_uuid")]
+            (false, true, true, false) => Version::Database,
+            #[cfg(feature = "experimental_uuid")]
+            (false, true, true, true) => Version::UnixTime,
+            #[cfg(feature = "experimental_uuid")]
+            (true, false, false, false) => Version::Vendor,
             _ => Version::Nil,
         }
     }
@@ -385,17 +396,33 @@ impl Uuid {
     /// The value of this will depend on [`Uuid::version`]
     #[inline]
     pub const fn timestamp(self) -> u64 {
-        u64::from_be_bytes([
-            // Clear version bits
-            self.0[6] & 0xF,
-            self.0[7],
-            self.0[4],
-            self.0[5],
-            self.0[0],
-            self.0[1],
-            self.0[2],
-            self.0[3],
-        ])
+        match self.version() {
+            #[cfg(feature = "experimental_uuid")]
+            Version::Database => u64::from_be_bytes([
+                // Clear version bits
+                self.0[6] & 0xF,
+                self.0[7],
+                self.0[4],
+                self.0[5],
+                self.0[0],
+                self.0[1],
+                self.0[2],
+                self.0[3],
+            ]),
+            // #[cfg(feature = "experimental_uuid")]
+            // Version::UnixTime => todo!(),
+            _ => u64::from_be_bytes([
+                // Clear version bits
+                self.0[6] & 0xF,
+                self.0[7],
+                self.0[4],
+                self.0[5],
+                self.0[0],
+                self.0[1],
+                self.0[2],
+                self.0[3],
+            ]),
+        }
     }
 
     /// The 14-bit UUID clock sequence
@@ -701,6 +728,95 @@ impl Uuid {
         ])
     }
 
+    /// Create a new Version 6 UUID
+    ///
+    /// This is identical to Version 1 UUIDs (see [`Uuid::new_v1`]),
+    /// except that the timestamp fields are re-ordered
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use nuuid::{NAMESPACE_DNS, Uuid};
+    /// # let (TIMESTAMP, RANDOM, PSEUDO) = (0, 0, [0; 6]);
+    /// let uuid = Uuid::new_v6(TIMESTAMP, RANDOM, PSEUDO);
+    /// ```
+    #[inline]
+    #[cfg(feature = "experimental_uuid")]
+    pub fn new_v6(timestamp: u64, counter: u16, node: [u8; 6]) -> Self {
+        // Truncate the highest 4 bits
+        // https://www.ietf.org/archive/id/draft-peabody-dispatch-new-uuid-format-04.html#section-6.1-2.14
+        let timestamp = (timestamp << 4).to_be_bytes();
+        let counter = counter.to_be_bytes();
+
+        Uuid::from_bytes([
+            // time_high
+            timestamp[0],
+            timestamp[1],
+            timestamp[2],
+            timestamp[3],
+            // time_mid
+            timestamp[4],
+            timestamp[5],
+            // time_low Version, shift 4 bits, skip `set_version` and set the version
+            (timestamp[6] >> 4) | (6u8 << 4),
+            timestamp[7],
+            // clock_seq_hi Variant, skip `set_variant` and set the variant
+            (counter[0] & 0x3F) | 0x80,
+            counter[1],
+            // Node
+            node[0],
+            node[1],
+            node[2],
+            node[3],
+            node[4],
+            node[5],
+        ])
+    }
+
+    /// Create a new Version 7 UUID
+    ///
+    /// This is similar to Version 1 and 6 UUIDs, but uses the UNIX epoch
+    /// timestamp source.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use nuuid::{NAMESPACE_DNS, Uuid};
+    /// # let (TIMESTAMP, RAND_A, RAND_B) = (0, 0, 0);
+    /// let uuid = Uuid::new_v7(TIMESTAMP, RAND_A, RAND_B);
+    /// ```
+    #[inline]
+    #[cfg(feature = "experimental_uuid")]
+    pub fn new_v7(timestamp: u64, rand_a: u16, rand_b: u64) -> Self {
+        // Truncate the highest 16 bits
+        // https://www.ietf.org/archive/id/draft-peabody-dispatch-new-uuid-format-04.html#section-6.1-2.14
+        let timestamp = (timestamp << 16).to_be_bytes();
+        let rand_a = rand_a.to_be_bytes();
+        let rand_b = rand_b.to_be_bytes();
+
+        Uuid::from_bytes([
+            // unix_ts_ms
+            timestamp[0],
+            timestamp[1],
+            timestamp[2],
+            timestamp[3],
+            timestamp[4],
+            timestamp[5],
+            // rand_a Version, ignore highest 4 bits, skip `set_version` and set the version
+            (rand_a[0] & 0xF) | (7u8 << 4),
+            rand_a[1],
+            // rand_b, Variant, skip `set_variant` and set the variant
+            (rand_b[0] & 0x3F) | 0x80,
+            rand_b[1],
+            rand_b[2],
+            rand_b[3],
+            rand_b[4],
+            rand_b[5],
+            rand_b[6],
+            rand_b[7],
+        ])
+    }
+
     /// Create a new Version 8 UUID
     ///
     /// This will set the version and variant bits as needed,
@@ -710,7 +826,7 @@ impl Uuid {
     ///
     /// ```rust
     /// # use nuuid::Uuid;
-    /// let uuid = Uuid::new_v8(b"I Am 16 bytes!!!");
+    /// let uuid = Uuid::new_v8(*b"I Am 16 bytes!!!");
     /// ```
     #[inline]
     #[cfg(feature = "experimental_uuid")]
@@ -830,10 +946,9 @@ impl fmt::Display for Uuid {
 /// # use nuuid::Uuid;
 /// let uuid = Uuid::parse("662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
 /// assert_eq!(format!("{:?}", uuid), "Uuid(662AA7C7-7598-4D56-8BCC-A72C30F998A2)");
-/// assert_eq!(format!("{:#?}", uuid), r#"Uuid {
-///     String: "662AA7C7-7598-4D56-8BCC-A72C30F998A2",
-///     Version: Random,
-///     Variant: Rfc4122,
+/// assert_eq!(format!("{:#?}", uuid), r#"Uuid(662AA7C7-7598-4D56-8BCC-A72C30F998A2) {
+///     Version: Random(4),
+///     Variant: Rfc4122(1),
 /// }"#);
 /// ```
 impl fmt::Debug for Uuid {
@@ -842,8 +957,8 @@ impl fmt::Debug for Uuid {
             write!(
                 f,
                 r#"Uuid({:X}) {{
-    Version: {}({})
-    Variant: {}({})
+    Version: {}({}),
+    Variant: {}({}),
 }}"#,
                 self,
                 self.version(),
@@ -954,6 +1069,44 @@ mod tests {
 
         assert_eq!(uuid.version(), ver);
         assert_eq!(uuid.variant(), Variant::Rfc4122);
+    }
+
+    #[test]
+    #[cfg(feature = "experimental_uuid")]
+    fn new_v6() {
+        // Values sourced from https://www.ietf.org/archive/id/draft-peabody-dispatch-new-uuid-format-04.html#name-test-vectors
+        const UUID: &str = "1EC9414C-232A-6B00-B3C8-9E6BDECED846";
+        let (ticks, counter, node) = (138648505420000000, 13256, [158, 107, 222, 206, 216, 70]);
+
+        let uuid = Uuid::new_v6(ticks, counter, node);
+        let uuid_ = Uuid::parse(UUID).unwrap();
+
+        assert_eq!(uuid.to_str_upper(&mut [0; 36]), UUID);
+        assert_eq!(uuid.version(), Version::Database);
+        assert_eq!(uuid.variant(), Variant::Rfc4122);
+
+        assert_eq!(uuid.timestamp(), uuid_.timestamp());
+        assert_eq!(uuid.clock_sequence(), uuid_.clock_sequence());
+        assert_eq!(uuid.node()[..], uuid_.node());
+    }
+
+    #[test]
+    #[cfg(feature = "experimental_uuid")]
+    fn new_v7() {
+        // Values sourced from https://www.ietf.org/archive/id/draft-peabody-dispatch-new-uuid-format-04.html#name-uuidv7-example-test-vector
+        const UUID: &str = "017F22E2-79B0-7CC3-98C4-DC0C0C07398F";
+        let (unix_ts, rand_a, rand_b) = (0x17F22E279B0, 0xCC3, 0x18C4DC0C0C07398F);
+
+        let uuid = Uuid::new_v7(unix_ts, rand_a, rand_b);
+        let uuid_ = Uuid::parse(UUID).unwrap();
+
+        assert_eq!(uuid.to_str_upper(&mut [0; 36]), UUID);
+        assert_eq!(uuid.version(), Version::UnixTime);
+        assert_eq!(uuid.variant(), Variant::Rfc4122);
+
+        assert_eq!(uuid.timestamp(), uuid_.timestamp());
+        assert_eq!(uuid.clock_sequence(), uuid_.clock_sequence());
+        assert_eq!(uuid.node()[..], uuid_.node());
     }
 
     #[test]
@@ -1070,9 +1223,7 @@ mod tests {
         let uuid = Uuid::parse_me(UUID).unwrap();
         let bad_uuid = Uuid::parse(UUID).unwrap();
 
-        // Appears as nil because bits are invalid.
-        assert_eq!(bad_uuid.version(), Version::Nil);
-
+        assert_ne!(bad_uuid.version(), Version::Random);
         assert_eq!(uuid.version(), Version::Random);
         assert_eq!(uuid.variant(), Variant::Rfc4122);
         // Cant be equal because endian
