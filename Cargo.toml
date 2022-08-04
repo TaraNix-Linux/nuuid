@@ -50,3 +50,4 @@ debug = true
 # all-features = true
 # default-target = "thumbv6m-none-eabi"
 rustdoc-args = ["--cfg", "docsrs"]
+features = ["experimental_uuid"]

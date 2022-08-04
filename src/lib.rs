@@ -158,14 +158,17 @@ pub enum Version {
 
     /// Version 6, re-ordered version of [`Version::time`] for DB locality.
     #[cfg(feature = "experimental_uuid")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "experimental_uuid")))]
     Database,
 
     /// Version 7, unix time based.
     #[cfg(feature = "experimental_uuid")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "experimental_uuid")))]
     UnixTime,
 
     /// Version 8, experimental or vendor specific format
     #[cfg(feature = "experimental_uuid")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "experimental_uuid")))]
     Vendor,
 }
 
@@ -200,6 +203,7 @@ impl fmt::Display for ParseUuidError {
 }
 
 #[cfg(any(test, feature = "std"))]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 impl std::error::Error for ParseUuidError {}
 
 /// Universally Unique Identifier, or UUID.
@@ -278,6 +282,7 @@ impl Uuid {
     /// The special Max UUID, where all bits are set to one.
     #[inline]
     #[cfg(feature = "experimental_uuid")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "experimental_uuid")))]
     pub const fn max() -> Self {
         Uuid([1; 16])
     }
@@ -742,6 +747,7 @@ impl Uuid {
     /// ```
     #[inline]
     #[cfg(feature = "experimental_uuid")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "experimental_uuid")))]
     pub fn new_v6(timestamp: u64, counter: u16, node: [u8; 6]) -> Self {
         // Truncate the highest 4 bits
         // https://www.ietf.org/archive/id/draft-peabody-dispatch-new-uuid-format-04.html#section-6.1-2.14
@@ -787,6 +793,7 @@ impl Uuid {
     /// ```
     #[inline]
     #[cfg(feature = "experimental_uuid")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "experimental_uuid")))]
     pub fn new_v7(timestamp: u64, rand_a: u16, rand_b: u64) -> Self {
         // Truncate the highest 16 bits
         // https://www.ietf.org/archive/id/draft-peabody-dispatch-new-uuid-format-04.html#section-6.1-2.14
@@ -830,6 +837,7 @@ impl Uuid {
     /// ```
     #[inline]
     #[cfg(feature = "experimental_uuid")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "experimental_uuid")))]
     pub fn new_v8(bytes: Bytes) -> Self {
         let mut uuid = Uuid::from_bytes(bytes);
         uuid.set_variant(Variant::Rfc4122);
