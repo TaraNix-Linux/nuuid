@@ -2,6 +2,7 @@
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 use core::{convert::TryInto, fmt, fmt::Write as _, str::FromStr};
+
 use md5::{Digest, Md5};
 #[cfg(feature = "getrandom")]
 use rand_chacha::rand_core::OsRng;
