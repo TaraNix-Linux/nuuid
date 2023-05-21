@@ -344,7 +344,7 @@ impl Uuid {
     /// so this value can't be relied upon.
     #[inline]
     pub const fn variant(self) -> Variant {
-        // Check the highest 3 bits
+        // Check the highest 3 bits, skipping the 5 bits of the time/clock sequence
         let byte = (self.0[8] >> 5) & 0b111;
 
         // Done this way for exhaustiveness checking.
