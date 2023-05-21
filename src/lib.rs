@@ -344,18 +344,22 @@ impl Uuid {
     /// so this value can't be relied upon.
     #[inline]
     pub const fn variant(self) -> Variant {
-        let byte = self.0[8];
         // Check the highest 3 bits
+        let byte = (self.0[8] >> 5) & 0b111;
+
+        // Done this way for exhaustiveness checking.
         match (
-            //
-            byte >> 7 & 1 == 1,
-            byte >> 6 & 1 == 1,
-            byte >> 5 & 1 == 1,
+            // Msb0
+            byte >> 2 & 1 == 1,
+            // Msb1
+            byte >> 1 & 1 == 1,
+            // Msb2
+            byte & 1 == 1,
         ) {
-            (true, true, true) => Variant::Reserved,
-            (true, true, false) => Variant::Microsoft,
-            (true, false, ..) => Variant::Rfc4122,
             (false, ..) => Variant::Ncs,
+            (true, false, ..) => Variant::Rfc4122,
+            (true, true, false) => Variant::Microsoft,
+            (true, true, true) => Variant::Reserved,
         }
     }
 
