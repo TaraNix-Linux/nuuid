@@ -19,6 +19,7 @@ const UUID_URN_LENGTH: usize = 45;
 const UUID_BRACED_LENGTH: usize = 38;
 const UUID_SIMPLE_LENGTH: usize = 32;
 const UUID_URN: &str = "urn:uuid:";
+const UUID_URN_PREFIX: usize = UUID_URN.len();
 
 /// The predefined DNS namespace, 6ba7b810-9dad-11d1-80b4-00c04fd430c8.
 pub const NAMESPACE_DNS: Uuid = Uuid::from_bytes([
@@ -530,8 +531,8 @@ impl Uuid {
     /// For usage examples see [`Uuid::to_str`].
     #[inline]
     pub fn to_urn(self, buf: &mut [u8; 45]) -> &mut str {
-        buf[..UUID_URN.len()].copy_from_slice(UUID_URN.as_bytes());
-        self.to_str((&mut buf[UUID_URN.len()..]).try_into().unwrap());
+        buf[..UUID_URN_PREFIX].copy_from_slice(UUID_URN.as_bytes());
+        self.to_str((&mut buf[UUID_URN_PREFIX..]).try_into().unwrap());
         core::str::from_utf8_mut(buf).expect("BUG: Invalid UTF8")
     }
 
@@ -547,7 +548,7 @@ impl Uuid {
     #[inline]
     pub fn to_urn_upper(self, buf: &mut [u8; 45]) -> &mut str {
         let s = self.to_urn(buf);
-        s[UUID_URN.len()..].make_ascii_uppercase();
+        s[UUID_URN_PREFIX..].make_ascii_uppercase();
         s
     }
 }
@@ -588,7 +589,7 @@ impl Uuid {
         let mut offset = false;
 
         s = match s.len() {
-            UUID_URN_LENGTH => &s[UUID_URN.len()..],
+            UUID_URN_LENGTH => &s[UUID_URN_PREFIX..],
             UUID_BRACED_LENGTH => &s[1..s.len() - 1],
             UUID_STR_LENGTH => s,
             UUID_SIMPLE_LENGTH => {
