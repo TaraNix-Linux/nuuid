@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+## [0.5.0] - 2023-05-22
+
 ### Added
 
 - `Version::Reserved`
@@ -146,7 +148,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - no_std UUID's
 
 <!-- next-url -->
-[Unreleased]: https://github.com/DianaNites/nuuid/compare/v0.4.7...HEAD
+[Unreleased]: https://github.com/DianaNites/nuuid/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/DianaNites/nuuid/compare/v0.4.7...v0.5.0
 [0.4.7]: https://github.com/DianaNites/nuuid/compare/v0.4.6...v0.4.7
 [0.4.6]: https://github.com/DianaNites/nuuid/compare/v0.4.5...v0.4.6
 [0.4.5]: https://github.com/DianaNites/nuuid/compare/v0.4.4...v0.4.5
