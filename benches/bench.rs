@@ -1,7 +1,8 @@
+use std::str::FromStr;
+
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use nuuid::{Rng, Uuid};
 use rand_chacha::rand_core::{OsRng, RngCore};
-use std::str::FromStr;
 use uuid_::{v1::Timestamp, Builder, Uuid as Uuid_};
 
 fn new_v4(c: &mut Criterion) {
@@ -45,14 +46,16 @@ fn from_str(c: &mut Criterion) {
     let mut group = c.benchmark_group("Constructing UUIDs from strings");
     group.throughput(Throughput::Elements(1));
     let mut buf = [0; 36];
+    // let mut buf = [0; 45];
     let input = Uuid::new_v4();
     let input = input.to_str(&mut buf);
+    // let input = input.to_urn(&mut buf);
 
     group.bench_with_input("Nuuid::from_str(upper hex)", input, |b, i| {
-        b.iter(|| Uuid::from_str(i))
+        b.iter(|| black_box(Uuid::from_str(black_box(i))))
     });
     group.bench_with_input("Uuid::from_str(upper hex)", input, |b, i| {
-        b.iter(|| Uuid_::from_str(i))
+        b.iter(|| black_box(Uuid_::from_str(black_box(i))))
     });
     group.finish();
 }
@@ -68,14 +71,14 @@ fn to_str(c: &mut Criterion) {
 
     group.bench_function("Nuuid::to_str", |b| {
         b.iter(|| {
-            uuid.to_str(&mut buf);
+            uuid.to_str(black_box(&mut buf));
         });
         buf = [0u8; 36];
     });
 
     group.bench_function("Uuid::hyphenated().encode_lower()", |b| {
         b.iter(|| {
-            uuid_.hyphenated().encode_lower(&mut buf);
+            uuid_.hyphenated().encode_lower(black_box(&mut buf));
         });
         buf = [0u8; 36];
     });
