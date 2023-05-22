@@ -28,14 +28,14 @@ This library follows [RFC 4122], with the following errata taken note of
 
 ```toml
 [dependencies]
-nuuid = "0.4.6"
+nuuid = "0.4.7"
 ```
 
 `no_std` support:
 
 ```toml
 [dependencies]
-nuuid = "0.4.6"
+nuuid = "0.4.7"
 ```
 
 ### Dependencies
