@@ -148,6 +148,9 @@ pub enum Version {
     #[cfg(feature = "experimental_uuid")]
     #[cfg_attr(docsrs, doc(cfg(feature = "experimental_uuid")))]
     Vendor,
+
+    /// Reserved versions. Currently, versions 9-15 are reserved.
+    Reserved,
 }
 
 impl fmt::Display for Version {
@@ -166,6 +169,8 @@ impl fmt::Display for Version {
             Version::UnixTime => write!(f, "UnixTime"),
             #[cfg(feature = "experimental_uuid")]
             Version::Vendor => write!(f, "Vendor"),
+
+            Version::Reserved => write!(f, "Reserved"),
         }
     }
 }
