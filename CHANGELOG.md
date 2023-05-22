@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- `Version::Reserved`
+
+### Changed
+
+- `Uuid::version` now returns `Version::Reserved` instead of `Version::Nil`
+- `Uuid::from_str` and `Uuid::to_str` are now significantly faster
+
 ## [0.4.6] - 2022-08-04
 
 ### Changed
