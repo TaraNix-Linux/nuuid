@@ -1,8 +1,13 @@
 //! Create and use UUID's
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
-use core::{convert::TryInto, fmt, fmt::Write as _, str::FromStr};
+use core::{
+    convert::TryInto,
+    fmt,
+    str::{from_utf8_unchecked_mut, FromStr},
+};
 
+use hex_simd::{decode_inplace, AsciiCase::Lower, Out};
 use md5::{Digest, Md5};
 #[cfg(feature = "getrandom")]
 use rand_chacha::rand_core::OsRng;
@@ -43,35 +48,6 @@ pub const NAMESPACE_X500: Uuid = Uuid::from_bytes([
 
 /// A 16 byte with the UUID.
 pub type Bytes = [u8; 16];
-
-/// Used to write out UUID's to a user-provided buffer.
-struct BytesWrapper<'a> {
-    bytes: &'a mut [u8],
-    offset: usize,
-}
-
-impl<'a> BytesWrapper<'a> {
-    #[inline]
-    fn new(bytes: &'a mut [u8]) -> Self {
-        Self { bytes, offset: 0 }
-    }
-
-    #[inline]
-    fn into_inner(self) -> &'a mut [u8] {
-        self.bytes
-    }
-}
-
-impl<'a> fmt::Write for BytesWrapper<'a> {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        if (self.bytes.len() - self.offset) < s.len() {
-            return Err(fmt::Error);
-        }
-        self.bytes[self.offset..][..s.len()].copy_from_slice(s.as_bytes());
-        self.offset += s.len();
-        Ok(())
-    }
-}
 
 /// A CSPRNG suitable for generating UUID's.
 #[derive(Debug, Clone)]
@@ -511,24 +487,41 @@ impl Uuid {
     /// let string = uuid.to_str((&mut data[..]).try_into().unwrap());
     /// ```
     pub fn to_str(self, buf: &mut [u8; 36]) -> &mut str {
+        // Add hyphens
+        buf[8] = b'-';
+        buf[13] = b'-';
+        buf[18] = b'-';
+        buf[23] = b'-';
+
         let bytes = self.to_bytes();
-        let time_low = u32::from_be_bytes(bytes[..4].try_into().unwrap());
-        let time_mid = u16::from_be_bytes(bytes[4..6].try_into().unwrap());
-        let time_hi_and_version = u16::from_be_bytes(bytes[6..8].try_into().unwrap());
-        let clock_seq_hi_and_reserved = u8::from_be_bytes(bytes[8..9].try_into().unwrap());
-        let clock_seq_low = u8::from_be_bytes(bytes[9..10].try_into().unwrap());
-        let mut node = [0; 8];
-        // Leading zeros, and last 48 bits/6 bytes
-        node[2..].copy_from_slice(&bytes[10..16]);
-        let node = u64::from_be_bytes(node);
-        let mut buf = BytesWrapper::new(buf);
-        write!(
-            buf,
-            "{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:012x}",
-            time_low, time_mid, time_hi_and_version, clock_seq_hi_and_reserved, clock_seq_low, node
-        )
-        .expect("BUG: Couldn't write UUID");
-        core::str::from_utf8_mut(buf.into_inner()).expect("BUG: Invalid UTF8")
+
+        let time_low = &bytes[..4];
+        let time_mid = &bytes[4..6];
+        let time_hi_and_version = &bytes[6..8];
+        let clock_seq_hi_and_reserved = &bytes[8..9];
+        let clock_seq_low = &bytes[9..10];
+        let node = &bytes[10..];
+
+        // Encode each field of the UUID
+        let _ = hex_simd::encode(time_low, Out::from_slice(&mut buf[..8]), Lower);
+        let _ = hex_simd::encode(time_mid, Out::from_slice(&mut buf[9..13]), Lower);
+        let _ = hex_simd::encode(
+            time_hi_and_version,
+            Out::from_slice(&mut buf[14..18]),
+            Lower,
+        );
+        let _ = hex_simd::encode(
+            clock_seq_hi_and_reserved,
+            Out::from_slice(&mut buf[19..21]),
+            Lower,
+        );
+        let _ = hex_simd::encode(clock_seq_low, Out::from_slice(&mut buf[21..23]), Lower);
+        let _ = hex_simd::encode(node, Out::from_slice(&mut buf[24..]), Lower);
+
+        debug_assert!(buf.is_ascii(), "BUG: Invalid ASCII in nuuid::Uuid::to_str");
+        // This is consistently faster than using the safe checked variant.
+        // Safety: Fully initialized with ASCII hex
+        unsafe { from_utf8_unchecked_mut(buf) }
     }
 
     /// Write a UUID as a lowercase ASCII string into `buf`, and return it as a
@@ -586,26 +579,27 @@ impl Uuid {
     /// Uuid::parse("{662AA7C7-7598-4D56-8BCC-A72C30F998A2}").unwrap();
     /// ```
     pub fn parse(s: &str) -> Result<Self, ParseUuidError> {
-        let mut s = s;
-        // Error if greater than max parsable length, or less than shortest
-        if s.len() > UUID_URN_LENGTH || s.len() < UUID_SIMPLE_LENGTH || !s.is_ascii() {
+        // Error if input is not ASCII
+        if !s.is_ascii() {
             return Err(ParseUuidError);
         }
-        // Amount to offset indexing by, to account for "Simple"
-        let mut offset = false;
 
-        s = match s.len() {
+        let s = match s.len() {
             UUID_URN_LENGTH => &s[UUID_URN_PREFIX..],
             UUID_BRACED_LENGTH => &s[1..s.len() - 1],
             UUID_STR_LENGTH => s,
             UUID_SIMPLE_LENGTH => {
-                offset = true;
-                s
+                return Ok(Uuid::from_bytes(
+                    u128::from_str_radix(s, 16)
+                        .map_err(|_| ParseUuidError)?
+                        .to_be_bytes(),
+                ));
             }
             _ => return Err(ParseUuidError),
         };
-        let mut raw = [0; 16];
-        let buf: &mut [u8] = &mut raw;
+        let s = s.as_bytes();
+
+        let mut raw = [0; UUID_SIMPLE_LENGTH];
         // "00000000-0000-0000-0000-000000000000"
         //          9    14   19   24
         // - 1
@@ -613,52 +607,28 @@ impl Uuid {
         //          9   13  17  21
         // - 1
 
-        let indexes = if !offset {
-            [
-                //
-                (0, 8),
-                (9, 13),
-                (14, 18),
-                (19, 23),
-                (24, 0),
-            ]
-        } else {
-            [
-                //
-                (0, 8),
-                (8, 12),
-                (12, 16),
-                (16, 20),
-                (20, 0),
-            ]
-        };
+        // Copy the UUID to `raw`, but without the hyphens, so we can
+        // decode it in-place.
+        // Benchmarking showed this was much faster than decoding directly
+        // to raw in-between the hyphens.
 
-        buf[..4].copy_from_slice(
-            &u32::from_str_radix(&s[..indexes[0].1], 16)
-                .or(Err(ParseUuidError))?
-                .to_be_bytes(),
-        );
-        buf[4..][..2].copy_from_slice(
-            &u16::from_str_radix(&s[indexes[1].0..indexes[1].1], 16)
-                .or(Err(ParseUuidError))?
-                .to_be_bytes(),
-        );
-        buf[6..][..2].copy_from_slice(
-            &u16::from_str_radix(&s[indexes[2].0..indexes[2].1], 16)
-                .or(Err(ParseUuidError))?
-                .to_be_bytes(),
-        );
-        buf[8..][..2].copy_from_slice(
-            &u16::from_str_radix(&s[indexes[3].0..indexes[3].1], 16)
-                .or(Err(ParseUuidError))?
-                .to_be_bytes(),
-        );
-        buf[10..].copy_from_slice(
-            &u64::from_str_radix(&s[indexes[4].0..], 16)
-                .or(Err(ParseUuidError))?
-                .to_be_bytes()[2..],
-        );
-        Ok(Uuid::from_bytes(raw))
+        // Node data
+        raw[20..].copy_from_slice(&s[24..]);
+
+        // High bits of the clock, variant, and low bits of the clock
+        raw[16..20].copy_from_slice(&s[19..23]);
+
+        // High bits of the timestamp, and version
+        raw[12..16].copy_from_slice(&s[14..18]);
+
+        // Middle bits of the timestamp
+        raw[8..12].copy_from_slice(&s[9..13]);
+
+        // Low bits of the timestamp
+        raw[..8].copy_from_slice(&s[..8]);
+
+        let x = decode_inplace(&mut raw).map_err(|_| ParseUuidError)?;
+        Ok(Uuid::from_bytes(x.try_into().map_err(|_| ParseUuidError)?))
     }
 
     /// Parse a [`Uuid`] from a string that is in mixed-endian
@@ -670,7 +640,6 @@ impl Uuid {
     /// correctly.
     ///
     /// See [`Uuid::from_bytes_me`] for details.
-    #[inline]
     pub fn parse_me(s: &str) -> Result<Self, ParseUuidError> {
         Uuid::from_str(s).map(Uuid::swap_endian)
     }
@@ -930,7 +899,6 @@ impl FromStr for Uuid {
     type Err = ParseUuidError;
 
     /// See [`Uuid::parse`] for details.
-    #[inline]
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Uuid::parse(s)
     }
