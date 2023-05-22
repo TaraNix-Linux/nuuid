@@ -14,16 +14,15 @@ This library, through the experimental and ***semver unstable***,
 
 Details ***MAY*** change as the draft does.
 
-See the draft [New UUID Formats draft RFC](https://www.ietf.org/archive/id/draft-peabody-dispatch-new-uuid-format-04.html) for details.
+See the draft [New UUID Formats draft RFC][uuid-draft] and
+[UUID Prototypes][uuid-proto] for details.
 
-## Security
+## Specifications
 
-UUID's can be used without requiring a central authority,
-but are not, strictly speaking, guaranteed to be unique, collisions may be possible.
+This library follows [RFC 4122], with the following errata taken note of
 
-Do not assume they are hard to guess, they should not be used as security capabilities.
-
-Do not assume people can tell if they've been altered at a glance. They can't.
+- [Errata 5560][eid5560]
+  - We choose to not touch don't-care bits
 
 ## Install
 
@@ -68,9 +67,14 @@ Feel free to ask questions on the [Github repo](https://github.com/DianaNites/uu
 
 Licensed under either of
 
-* Apache License, Version 2.0
+- Apache License, Version 2.0
    ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0)>
-* MIT license
+- MIT license
    ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT)>
 
 at your option.
+
+[RFC 4122]: https://www.rfc-editor.org/rfc/rfc4122
+[eid5560]: https://www.rfc-editor.org/errata/eid5560
+[uuid-draft]: https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis
+[uuid-proto]: https://github.com/uuid6/prototypes
