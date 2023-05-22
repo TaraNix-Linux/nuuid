@@ -42,6 +42,9 @@ experimental_uuid = []
 name = "bench"
 harness = false
 
+[profile.release]
+debug = true
+
 [profile.bench]
 debug = true
 
