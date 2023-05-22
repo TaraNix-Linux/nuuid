@@ -349,7 +349,7 @@ impl Uuid {
     /// For "incorrect" or non-RFC UUIDs, this value may be nonsensical.
     ///
     /// If the version bits do not match any known version,
-    /// [`Version::Nil`] is returned instead.
+    /// [`Version::Reserved`] is returned instead.
     /// As new versions are recognized, this may change.
     ///
     /// # Warning
@@ -374,11 +374,14 @@ impl Uuid {
 
             #[cfg(feature = "experimental_uuid")]
             (false, true, true, false) => Version::Database,
+
             #[cfg(feature = "experimental_uuid")]
             (false, true, true, true) => Version::UnixTime,
+
             #[cfg(feature = "experimental_uuid")]
             (true, false, false, false) => Version::Vendor,
-            _ => Version::Nil,
+
+            _ => Version::Reserved,
         }
     }
 
