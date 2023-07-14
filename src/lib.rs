@@ -176,8 +176,16 @@ impl fmt::Display for Version {
 }
 
 /// Error parsing UUID
-#[derive(Debug)]
-pub struct ParseUuidError;
+#[derive(Debug, Clone)]
+pub struct ParseUuidError {
+    _priv: (),
+}
+
+impl ParseUuidError {
+    pub const fn new() -> Self {
+        Self { _priv: () }
+    }
+}
 
 impl fmt::Display for ParseUuidError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -589,7 +597,7 @@ impl Uuid {
     pub fn parse(s: &str) -> Result<Self, ParseUuidError> {
         // Error if input is not ASCII
         if !s.is_ascii() {
-            return Err(ParseUuidError);
+            return Err(ParseUuidError::new());
         }
 
         let s = match s.len() {
@@ -599,11 +607,11 @@ impl Uuid {
             UUID_SIMPLE_LENGTH => {
                 return Ok(Uuid::from_bytes(
                     u128::from_str_radix(s, 16)
-                        .map_err(|_| ParseUuidError)?
+                        .map_err(|_| ParseUuidError::new())?
                         .to_be_bytes(),
                 ));
             }
-            _ => return Err(ParseUuidError),
+            _ => return Err(ParseUuidError::new()),
         };
         let s = s.as_bytes();
 
@@ -635,8 +643,10 @@ impl Uuid {
         // Low bits of the timestamp
         raw[..8].copy_from_slice(&s[..8]);
 
-        let x = decode_inplace(&mut raw).map_err(|_| ParseUuidError)?;
-        Ok(Uuid::from_bytes(x.try_into().map_err(|_| ParseUuidError)?))
+        let x = decode_inplace(&mut raw).map_err(|_| ParseUuidError::new())?;
+        Ok(Uuid::from_bytes(
+            x.try_into().map_err(|_| ParseUuidError::new())?,
+        ))
     }
 
     /// Parse a [`Uuid`] from a string that is in mixed-endian
