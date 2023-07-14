@@ -779,7 +779,10 @@ impl Uuid {
     ///
     /// If the `nightly` crate feature is enabled, this function will be const,
     /// which is slow, but at runtime will attempt to select an optimally
-    /// performing function. This depends on the unstable `const_eval_select`
+    /// performing function. This depends on the unstable
+    /// [`const_eval_select`][ces]
+    ///
+    /// [ces]: core::intrinsics::const_eval_select
     #[cfg(feature = "nightly")]
     pub const fn parse(s: &str) -> Result<Self, ParseUuidError> {
         // Safety: Both these functions are observably equivalent and whose outputs only
@@ -817,7 +820,10 @@ impl Uuid {
     ///
     /// If the `nightly` crate feature is enabled, this function will be const,
     /// which is slow, but at runtime will attempt to select an optimally
-    /// performing function. This depends on the unstable `const_eval_select`
+    /// performing function. This depends on the unstable
+    /// [`const_eval_select`][ces]
+    ///
+    /// [ces]: core::intrinsics::const_eval_select
     #[cfg(not(feature = "nightly"))]
     // !!! Nightly Uuid::parse are canonical doc source !!!
     pub fn parse(s: &str) -> Result<Self, ParseUuidError> {
