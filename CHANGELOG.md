@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- `uuid!` macro, for constant compile-time `Uuid` literals
+- `Uuid::parse_const`, for parsing a UUID string const-ly.
+
+### Breaking
+
+- `ParseUuidError` is a private struct
+
 ## [0.5.0] - 2023-05-22
 
 ### Added
