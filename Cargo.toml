@@ -22,7 +22,7 @@ rand_core = { version = "0.6.4", default-features = false }
 hex-simd = { version = "0.8.0", default-features = false }
 
 [dev-dependencies]
-criterion = { version = "0.3.6", features = ["html_reports"] }
+criterion = { version = "0.5.1", features = ["html_reports"] }
 uuid_ = { version = "1.4.0", package = "uuid", features = ["v4", "v5", "v1"] }
 
 [features]
