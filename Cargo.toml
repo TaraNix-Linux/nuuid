@@ -8,7 +8,7 @@ description = "A new, no_std, UUID Library"
 repository = "https://github.com/DianaNites/nuuid"
 documentation = "https://docs.rs/nuuid"
 readme = "README.md"
-keywords = ["uuid", "guid", "unique"]
+keywords = ["uuid", "guid"]
 categories = ["no-std", "parser-implementations"]
 
 [dependencies]
