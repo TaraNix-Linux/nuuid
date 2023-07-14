@@ -56,6 +56,18 @@ pub const unsafe fn const_get_unchecked(bytes: &[u8], idx: usize) -> u8 {
     unsafe { *bytes.as_ptr().add(idx) }
 }
 
+const fn decode_digit(b: u8) -> Result<u8, ParseUuidError> {
+    Ok(match b {
+        b'0'..=b'9' => b - b'0',
+        b'a'..=b'f' => b - b'a' + 10,
+        b'A'..=b'F' => b - b'A' + 10,
+        b'-' => u8::MAX,
+        _ => {
+            return Err(ParseUuidError::new());
+        }
+    })
+}
+
 /// Decode a hex string in stable const Rust
 ///
 /// This is very slow compared to what can be done at runtime.
@@ -80,6 +92,23 @@ pub const fn const_hex_decode(bytes: &[u8]) -> Result<[u8; 16], ParseUuidError> 
         // next element.
         let b2 = unsafe { const_get_unchecked(bytes, i + 1) };
 
+        #[cfg(no)]
+        let h = match decode_digit(b) {
+            Ok(u8::MAX) => {
+                i += 1;
+                continue;
+            }
+            Ok(b) => b,
+            Err(e) => return Err(e),
+        };
+
+        #[cfg(no)]
+        let l = match decode_digit(b2) {
+            Ok(b) => b,
+            Err(e) => return Err(e),
+        };
+
+        // #[cfg(no)]
         let h = match b {
             b'0'..=b'9' => b - b'0',
             b'a'..=b'f' => b - b'a' + 10,
@@ -93,6 +122,7 @@ pub const fn const_hex_decode(bytes: &[u8]) -> Result<[u8; 16], ParseUuidError> 
             }
         };
 
+        // #[cfg(no)]
         let l = match b2 {
             b'0'..=b'9' => b2 - b'0',
             b'a'..=b'f' => b2 - b'a' + 10,
