@@ -617,6 +617,15 @@ impl Uuid {
         core::str::from_utf8_mut(buf).expect("BUG: Invalid UTF8")
     }
 
+    /// [`Uuid::to_str`], simple variant without hyphens.
+    #[inline]
+    pub fn to_simple(self, buf: &mut [u8; 32]) -> &mut str {
+        let _ = hex_simd::encode(&self.0, Out::from_slice(buf), Lower);
+        debug_assert!(buf.is_ascii(), "BUG: Invalid ASCII in nuuid::Uuid::to_str");
+        // Safety: Fully initialized with ASCII hex
+        unsafe { from_utf8_unchecked_mut(buf) }
+    }
+
     /// [`Uuid::to_str`], but uppercase.
     #[inline]
     pub fn to_str_upper(self, buf: &mut [u8; 36]) -> &mut str {
@@ -630,6 +639,14 @@ impl Uuid {
     pub fn to_urn_upper(self, buf: &mut [u8; 45]) -> &mut str {
         let s = self.to_urn(buf);
         s[UUID_URN_PREFIX..].make_ascii_uppercase();
+        s
+    }
+
+    /// [`Uuid::to_simple`], but the UUID is uppercase.
+    #[inline]
+    pub fn to_simple_upper(self, buf: &mut [u8; 32]) -> &mut str {
+        let s = self.to_simple(buf);
+        s.make_ascii_uppercase();
         s
     }
 }
