@@ -278,11 +278,14 @@ impl Uuid {
             UUID_BRACED_LENGTH => &s[1..s.len() - 1],
             UUID_STR_LENGTH => s,
             UUID_SIMPLE_LENGTH => {
-                return Ok(Uuid::from_bytes(
-                    u128::from_str_radix(s, 16)
+                return Ok(Uuid::from_bytes({
+                    let mut raw = [0; 32];
+                    raw.copy_from_slice(s.as_bytes());
+                    decode_inplace(&mut raw)
                         .map_err(|_| ParseUuidError::new())?
-                        .to_be_bytes(),
-                ));
+                        .try_into()
+                        .map_err(|_| ParseUuidError::new())?
+                }));
             }
             _ => return Err(ParseUuidError::new()),
         };
