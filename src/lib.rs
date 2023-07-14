@@ -273,11 +273,6 @@ impl Uuid {
     ///
     /// Optimized for runtime
     fn parse_imp(s: &str) -> Result<Uuid, ParseUuidError> {
-        // Error if input is not ASCII
-        if !s.is_ascii() {
-            return Err(ParseUuidError::new());
-        }
-
         let s = match s.len() {
             UUID_URN_LENGTH => &s[UUID_URN_PREFIX..],
             UUID_BRACED_LENGTH => &s[1..s.len() - 1],
@@ -292,6 +287,11 @@ impl Uuid {
             _ => return Err(ParseUuidError::new()),
         };
         let s = s.as_bytes();
+
+        // Error if input is not ASCII
+        if !s.is_ascii() {
+            return Err(ParseUuidError::new());
+        }
 
         let mut raw = [0; UUID_SIMPLE_LENGTH];
         // "00000000-0000-0000-0000-000000000000"
