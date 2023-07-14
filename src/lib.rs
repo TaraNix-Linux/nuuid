@@ -2,6 +2,9 @@
 #![allow(unused_imports, dead_code, unreachable_code)]
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(feature = "nightly", feature(const_eval_select, core_intrinsics))]
+#[cfg(feature = "nightly")]
+use core::intrinsics::const_eval_select;
 use core::{
     convert::TryInto,
     fmt,
@@ -619,10 +622,19 @@ impl Uuid {
     /// Uuid::parse("{662AA7C7-7598-4D56-8BCC-A72C30F998A2}").unwrap();
     /// ```
     pub fn parse(s: &str) -> Result<Self, ParseUuidError> {
+        #[cfg(feature = "nightly")]
+        return unsafe { const_eval_select((s,), Self::parse_const, parse_imp) };
+
+        #[cfg(not(feature = "nightly"))]
+        return parse_imp(s);
+
+        #[cfg(no)]
         #[allow(clippy::needless_return)]
         return Self::parse_const(s);
-        #[cfg(no)]
-        {
+
+        // #[cfg(no)]
+        // {
+        fn parse_imp(s: &str) -> Result<Uuid, ParseUuidError> {
             // Error if input is not ASCII
             if !s.is_ascii() {
                 return Err(ParseUuidError::new());

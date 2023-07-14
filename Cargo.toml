@@ -26,7 +26,12 @@ criterion = { version = "0.5.1", features = ["html_reports"] }
 uuid_ = { version = "1.4.0", package = "uuid", features = ["v4", "v5", "v1"] }
 
 [features]
-default = ["getrandom", "std"]
+default = [
+    #
+    "getrandom",
+    "std",
+    # "nightly",
+]
 
 # Implements some traits from std.
 std = []
@@ -38,6 +43,9 @@ getrandom = ["rand_core/getrandom"]
 # Enable experimental UUID formats from https://github.com/ietf-wg-uuidrev/rfc4122bis
 # There is no stability guarantee for these formats and API or output may change when the draft does
 experimental_uuid = []
+
+# Enable unstable nightly only features / optimizations
+nightly = []
 
 [[bench]]
 name = "bench"
