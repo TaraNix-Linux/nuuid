@@ -76,5 +76,5 @@ at your option.
 
 [RFC 4122]: https://www.rfc-editor.org/rfc/rfc4122
 [eid5560]: https://www.rfc-editor.org/errata/eid5560
-[uuid-draft]: https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis
-[uuid-proto]: https://github.com/uuid6/prototypes
+[uuid-draft]: https://datatracker.ietf.org/doc/html/draft-ietf-uuidrev-rfc4122bis-07
+[uuid-proto]: https://github.com/ietf-wg-uuidrev/rfc4122bis
