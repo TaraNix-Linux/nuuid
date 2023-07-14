@@ -8,6 +8,7 @@ use core::intrinsics::const_eval_select;
 use core::{
     convert::TryInto,
     fmt,
+    num::{NonZeroU8, NonZeroUsize},
     str::{from_utf8_unchecked_mut, FromStr},
 };
 
@@ -182,21 +183,87 @@ impl fmt::Display for Version {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+enum ErrorInfo {
+    // Use NonZeroU8 to optimize error size
+    // 0 is always a valid hex digit byte, so can never be a legitimate value and is free as a
+    // niche.
+    InvalidByte {
+        index: usize,
+        byte: NonZeroU8,
+    },
+
+    /// Invalid length
+    Len(usize),
+
+    None,
+}
+
 /// Error parsing UUID
 #[derive(Debug, Clone)]
 pub struct ParseUuidError {
-    _priv: (),
+    /// (idx, invalid byte)
+    info: ErrorInfo,
 }
 
 impl ParseUuidError {
-    pub const fn new() -> Self {
-        Self { _priv: () }
+    const fn new() -> Self {
+        Self {
+            info: ErrorInfo::None,
+        }
+    }
+
+    const fn info(idx: usize, b: u8) -> Self {
+        assert!(b != 0, "ParseUuidError::info was passed zero");
+        Self {
+            info: ErrorInfo::InvalidByte {
+                index: idx,
+                // Safety: Checked non-zero above
+                // ..unwrap isn't const???
+                byte: unsafe { NonZeroU8::new_unchecked(b) },
+            },
+        }
+    }
+
+    const fn len(len: usize) -> Self {
+        Self {
+            info: ErrorInfo::Len(len),
+        }
+    }
+
+    /// Index to the byte that caused the error, if known
+    #[inline]
+    const fn _index(&self) -> Option<usize> {
+        match self.info {
+            ErrorInfo::InvalidByte { index, byte: _ } => Some(index),
+            _ => None,
+        }
+    }
+
+    /// Byte value that caused the error, if known
+    #[inline]
+    const fn _value(&self) -> Option<u8> {
+        match self.info {
+            ErrorInfo::InvalidByte { index: _, byte } => Some(byte.get()),
+            _ => None,
+        }
     }
 }
 
 impl fmt::Display for ParseUuidError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ParseUuidError")
+        match self.info {
+            ErrorInfo::InvalidByte { index, byte } => {
+                write!(
+                    f,
+                    "error parsing uuid, character `{byte}` at index {index} invalid"
+                )
+            }
+
+            ErrorInfo::Len(l) => write!(f, "error parsing uuid, unexpectedly found {l} bytes"),
+
+            ErrorInfo::None => write!(f, "error parsing uuid"),
+        }
     }
 }
 
@@ -278,6 +345,10 @@ impl Uuid {
             UUID_BRACED_LENGTH => &s[1..s.len() - 1],
             UUID_STR_LENGTH => s,
             UUID_SIMPLE_LENGTH => {
+                // Simple can be decoded all in one go directly, much faster
+                //
+                // Loses, or more accurately prevents gaining, the ability to report the invalid
+                // byte, since hex-simd doesn't.
                 return Ok(Uuid::from_bytes({
                     let mut raw = [0; 32];
                     raw.copy_from_slice(s.as_bytes());
@@ -287,15 +358,17 @@ impl Uuid {
                         .map_err(|_| ParseUuidError::new())?
                 }));
             }
-            _ => return Err(ParseUuidError::new()),
+            l => return Err(ParseUuidError::len(l)),
         };
-        let s = s.as_bytes();
+        let bytes = s.as_bytes();
 
         // Error if input is not ASCII
-        if !s.is_ascii() {
+        if !bytes.is_ascii() {
             return Err(ParseUuidError::new());
         }
 
+        // The UUID display formats are basically either "yes dashes" or "no dashes",
+        // other aspects don't matter.
         let mut raw = [0; UUID_SIMPLE_LENGTH];
         // "00000000-0000-0000-0000-000000000000"
         //          9    14   19   24
@@ -306,21 +379,22 @@ impl Uuid {
 
         // Copy the UUID to `raw`, but without the hyphens, so we can
         // decode it in-place.
+        // Done in this order for optimization purposes
 
         // Node data
-        raw[20..].copy_from_slice(&s[24..]);
+        raw[20..].copy_from_slice(&bytes[24..]);
 
         // High bits of the clock, variant, and low bits of the clock
-        raw[16..20].copy_from_slice(&s[19..23]);
+        raw[16..20].copy_from_slice(&bytes[19..23]);
 
         // High bits of the timestamp, and version
-        raw[12..16].copy_from_slice(&s[14..18]);
+        raw[12..16].copy_from_slice(&bytes[14..18]);
 
         // Middle bits of the timestamp
-        raw[8..12].copy_from_slice(&s[9..13]);
+        raw[8..12].copy_from_slice(&bytes[9..13]);
 
         // Low bits of the timestamp
-        raw[..8].copy_from_slice(&s[..8]);
+        raw[..8].copy_from_slice(&bytes[..8]);
 
         let x = decode_inplace(&mut raw).map_err(|_| ParseUuidError::new())?;
         Ok(Uuid::from_bytes(
@@ -1176,6 +1250,9 @@ mod tests {
     const UUID_V4_BRACED: &str = "{662aa7c7-7598-4d56-8bcc-a72c30f998a2}";
     const UUID_V4_URN: &str = "urn:uuid:662aa7c7-7598-4d56-8bcc-a72c30f998a2";
     const UUID_V4_URN_UPPER: &str = "urn:uuid:662AA7C7-7598-4D56-8BCC-A72C30F998A2";
+    const UUID_V4_INVALID_LONG: &str = "662aa7c7-7598-4d56-8bcc-a72c30f998a20000";
+    const UUID_V4_INVALID_SHORT: &str = "662aa7c7-7598-4d56-8bcc-a72c30f99a";
+    const UUID_V4_INVALID_CHAR: &str = "662aa7c7-7598-4d56-8bcc-a72c30f99@2";
     const RAW: [u8; 16] = [
         102, 42, 167, 199, 117, 152, 77, 86, 139, 204, 167, 44, 48, 249, 152, 162,
     ];
