@@ -576,6 +576,9 @@ impl Uuid {
 }
 
 impl Uuid {
+    /// Parse a [`Uuid`] from a string, but in a const context.
+    ///
+    /// See [`Uuid::parse`] for more documentation
     pub const fn parse_const(s: &str) -> Result<Self, ParseUuidError> {
         let bytes = s.as_bytes();
         let len = bytes.len();
@@ -622,15 +625,15 @@ impl Uuid {
     /// Uuid::parse("{662AA7C7-7598-4D56-8BCC-A72C30F998A2}").unwrap();
     /// ```
     pub fn parse(s: &str) -> Result<Self, ParseUuidError> {
+        #[cfg(no)]
+        #[allow(clippy::needless_return)]
+        return Self::parse_const(s);
+
         #[cfg(feature = "nightly")]
         return unsafe { const_eval_select((s,), Self::parse_const, parse_imp) };
 
         #[cfg(not(feature = "nightly"))]
         return parse_imp(s);
-
-        #[cfg(no)]
-        #[allow(clippy::needless_return)]
-        return Self::parse_const(s);
 
         // #[cfg(no)]
         // {
