@@ -306,8 +306,6 @@ impl Uuid {
 
         // Copy the UUID to `raw`, but without the hyphens, so we can
         // decode it in-place.
-        // Benchmarking showed this was much faster than decoding directly
-        // to raw in-between the hyphens.
 
         // Node data
         raw[20..].copy_from_slice(&s[24..]);
