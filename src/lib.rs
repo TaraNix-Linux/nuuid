@@ -635,8 +635,7 @@ impl Uuid {
         #[cfg(not(feature = "nightly"))]
         return parse_imp(s);
 
-        // #[cfg(no)]
-        // {
+        /// Internal implementation detail
         fn parse_imp(s: &str) -> Result<Uuid, ParseUuidError> {
             // Error if input is not ASCII
             if !s.is_ascii() {

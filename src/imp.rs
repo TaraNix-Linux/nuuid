@@ -51,12 +51,19 @@ const fn _const_is_ascii_hex_dash(bytes: &[u8]) -> bool {
 }
 
 /// Stable const version of slice get_unchecked
+///
+/// # Safety
+///
+/// - `idx` must be in bounds
 pub const unsafe fn const_get_unchecked(bytes: &[u8], idx: usize) -> u8 {
     // Safety: Internal function, statically known to be used only with valid values
     unsafe { *bytes.as_ptr().add(idx) }
 }
 
-const fn decode_digit(b: u8) -> Result<u8, ParseUuidError> {
+/// Decode hex digits.
+///
+/// Returns [`u8::MAX`] for `-`
+const fn _decode_digit(b: u8) -> Result<u8, ParseUuidError> {
     Ok(match b {
         b'0'..=b'9' => b - b'0',
         b'a'..=b'f' => b - b'a' + 10,
@@ -76,10 +83,7 @@ pub const fn const_hex_decode(bytes: &[u8]) -> Result<[u8; 16], ParseUuidError> 
 
     // `bytes` length cannot be anything except these two lengths
     if !(len == UUID_SIMPLE_LENGTH || len == UUID_STR_LENGTH) {
-        // panic!("Should be impossible");
-        // Safety: This is an internal function and this condition is statically known
-        // to be impossible
-        unsafe { unreachable_unchecked() }
+        panic!("unreachable: Invalid const UUID len")
     }
 
     let mut out = [0u8; 16];
