@@ -268,6 +268,64 @@ impl Uuid {
 
         self
     }
+
+    /// Internal implementation detail for [`Uuid::parse`]
+    ///
+    /// Optimized for runtime
+    fn parse_imp(s: &str) -> Result<Uuid, ParseUuidError> {
+        // Error if input is not ASCII
+        if !s.is_ascii() {
+            return Err(ParseUuidError::new());
+        }
+
+        let s = match s.len() {
+            UUID_URN_LENGTH => &s[UUID_URN_PREFIX..],
+            UUID_BRACED_LENGTH => &s[1..s.len() - 1],
+            UUID_STR_LENGTH => s,
+            UUID_SIMPLE_LENGTH => {
+                return Ok(Uuid::from_bytes(
+                    u128::from_str_radix(s, 16)
+                        .map_err(|_| ParseUuidError::new())?
+                        .to_be_bytes(),
+                ));
+            }
+            _ => return Err(ParseUuidError::new()),
+        };
+        let s = s.as_bytes();
+
+        let mut raw = [0; UUID_SIMPLE_LENGTH];
+        // "00000000-0000-0000-0000-000000000000"
+        //          9    14   19   24
+        // - 1
+        // "00000000000000000000000000000000"
+        //          9   13  17  21
+        // - 1
+
+        // Copy the UUID to `raw`, but without the hyphens, so we can
+        // decode it in-place.
+        // Benchmarking showed this was much faster than decoding directly
+        // to raw in-between the hyphens.
+
+        // Node data
+        raw[20..].copy_from_slice(&s[24..]);
+
+        // High bits of the clock, variant, and low bits of the clock
+        raw[16..20].copy_from_slice(&s[19..23]);
+
+        // High bits of the timestamp, and version
+        raw[12..16].copy_from_slice(&s[14..18]);
+
+        // Middle bits of the timestamp
+        raw[8..12].copy_from_slice(&s[9..13]);
+
+        // Low bits of the timestamp
+        raw[..8].copy_from_slice(&s[..8]);
+
+        let x = decode_inplace(&mut raw).map_err(|_| ParseUuidError::new())?;
+        Ok(Uuid::from_bytes(
+            x.try_into().map_err(|_| ParseUuidError::new())?,
+        ))
+    }
 }
 
 impl Uuid {
@@ -624,72 +682,54 @@ impl Uuid {
     /// Uuid::parse("{662aa7c7-7598-4d56-8bcc-a72c30f998a2}").unwrap();
     /// Uuid::parse("{662AA7C7-7598-4D56-8BCC-A72C30F998A2}").unwrap();
     /// ```
+    ///
+    /// # Optimizations
+    ///
+    /// If the `nightly` crate feature is enabled, this function will be const,
+    /// which is slow, but at runtime will attempt to select an optimally
+    /// performing function. This depends on the unstable `const_eval_select`
+    #[cfg(feature = "nightly")]
+    pub const fn parse(s: &str) -> Result<Self, ParseUuidError> {
+        // Safety: Both these functions are observably equivalent and whose outputs only
+        // on their inputs, all of which are identical.
+        unsafe { const_eval_select((s,), Self::parse_const, Self::parse_imp) }
+    }
+
+    /// Parse a [`Uuid`] from a string
+    ///
+    /// This method is case insensitive and supports the following formats:
+    ///
+    /// - `urn:uuid:` `urn:uuid:662aa7c7-7598-4d56-8bcc-a72c30f998a2`
+    /// - "Braced" `{662aa7c7-7598-4d56-8bcc-a72c30f998a2}`
+    /// - "Hyphenate" `662aa7c7-7598-4d56-8bcc-a72c30f998a2`
+    /// - "Simple" `662aa7c775984d568bcca72c30f998a2`
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use nuuid::Uuid;
+    /// Uuid::parse("662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
+    /// Uuid::parse("662AA7C7-7598-4D56-8BCC-A72C30F998A2").unwrap();
+    ///
+    /// Uuid::parse("urn:uuid:662aa7c7-7598-4d56-8bcc-a72c30f998a2").unwrap();
+    /// Uuid::parse("urn:uuid:662AA7C7-7598-4D56-8BCC-A72C30F998A2").unwrap();
+    ///
+    /// Uuid::parse("662aa7c775984d568bcca72c30f998a2").unwrap();
+    /// Uuid::parse("662AA7C775984D568BCCA72C30F998A2").unwrap();
+    ///
+    /// Uuid::parse("{662aa7c7-7598-4d56-8bcc-a72c30f998a2}").unwrap();
+    /// Uuid::parse("{662AA7C7-7598-4D56-8BCC-A72C30F998A2}").unwrap();
+    /// ```
+    ///
+    /// # Optimizations
+    ///
+    /// If the `nightly` crate feature is enabled, this function will be const,
+    /// which is slow, but at runtime will attempt to select an optimally
+    /// performing function. This depends on the unstable `const_eval_select`
+    #[cfg(not(feature = "nightly"))]
+    // !!! Nightly Uuid::parse are canonical doc source !!!
     pub fn parse(s: &str) -> Result<Self, ParseUuidError> {
-        #[cfg(no)]
-        #[allow(clippy::needless_return)]
-        return Self::parse_const(s);
-
-        #[cfg(feature = "nightly")]
-        return unsafe { const_eval_select((s,), Self::parse_const, parse_imp) };
-
-        #[cfg(not(feature = "nightly"))]
-        return parse_imp(s);
-
-        /// Internal implementation detail
-        fn parse_imp(s: &str) -> Result<Uuid, ParseUuidError> {
-            // Error if input is not ASCII
-            if !s.is_ascii() {
-                return Err(ParseUuidError::new());
-            }
-
-            let s = match s.len() {
-                UUID_URN_LENGTH => &s[UUID_URN_PREFIX..],
-                UUID_BRACED_LENGTH => &s[1..s.len() - 1],
-                UUID_STR_LENGTH => s,
-                UUID_SIMPLE_LENGTH => {
-                    return Ok(Uuid::from_bytes(
-                        u128::from_str_radix(s, 16)
-                            .map_err(|_| ParseUuidError::new())?
-                            .to_be_bytes(),
-                    ));
-                }
-                _ => return Err(ParseUuidError::new()),
-            };
-            let s = s.as_bytes();
-
-            let mut raw = [0; UUID_SIMPLE_LENGTH];
-            // "00000000-0000-0000-0000-000000000000"
-            //          9    14   19   24
-            // - 1
-            // "00000000000000000000000000000000"
-            //          9   13  17  21
-            // - 1
-
-            // Copy the UUID to `raw`, but without the hyphens, so we can
-            // decode it in-place.
-            // Benchmarking showed this was much faster than decoding directly
-            // to raw in-between the hyphens.
-
-            // Node data
-            raw[20..].copy_from_slice(&s[24..]);
-
-            // High bits of the clock, variant, and low bits of the clock
-            raw[16..20].copy_from_slice(&s[19..23]);
-
-            // High bits of the timestamp, and version
-            raw[12..16].copy_from_slice(&s[14..18]);
-
-            // Middle bits of the timestamp
-            raw[8..12].copy_from_slice(&s[9..13]);
-
-            // Low bits of the timestamp
-            raw[..8].copy_from_slice(&s[..8]);
-
-            let x = decode_inplace(&mut raw).map_err(|_| ParseUuidError::new())?;
-            Ok(Uuid::from_bytes(
-                x.try_into().map_err(|_| ParseUuidError::new())?,
-            ))
-        }
+        Self::parse_imp(s)
     }
 
     /// Parse a [`Uuid`] from a string that is in mixed-endian
@@ -1076,6 +1116,38 @@ impl AsRef<[u8; 16]> for Uuid {
     }
 }
 
+/// Macro to create a [`Uuid`]
+///
+/// # Compile fails
+///
+/// If the passed expression is not a string or is unable to run in const
+/// context
+///
+/// # Example
+///
+/// ```rust
+/// # use nuuid::{uuid, Uuid};
+/// let uuid: Uuid = uuid!("662aa7c7-7598-4d56-8bcc-a72c30f998a2");
+///
+/// const UUID_STR: &str = "662aa7c7-7598-4d56-8bcc-a72c30f998a2";
+/// let uuid: Uuid = uuid!(UUID_STR);
+/// ```
+#[macro_export]
+macro_rules! uuid {
+    ($s:expr) => {{
+        use $crate::Uuid;
+
+        const S: &'static str = $s;
+        const U: Uuid = match Uuid::parse_const(S) {
+            Ok(u) => u,
+            Err(_) => {
+                panic!(concat!("Invalid UUID: ", stringify!($s)));
+            }
+        };
+        U
+    }};
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1198,16 +1270,28 @@ mod tests {
         let test = &[UUID_V4, UUID_V4_URN, UUID_V4_BRACED, UUID_V4_SIMPLE];
         for uuid in test {
             println!("Source UUID: {} ({} bytes)", uuid, uuid.len());
+            let const_uuid = Uuid::parse_const(&uuid.to_ascii_uppercase()).unwrap();
             let uuid = Uuid::from_str(&uuid.to_ascii_lowercase()).unwrap();
             println!("Parsed UUID: {} ({} bytes)\n", uuid, uuid.0.len());
             assert_eq!(RAW, uuid.to_bytes(), "Parsed UUID bytes don't match");
+            assert_eq!(
+                RAW,
+                const_uuid.to_bytes(),
+                "Mis-match between const and runtime UUID parsing!"
+            );
         }
 
         for uuid in test {
             println!("Source UUID: {}", uuid);
+            let const_uuid = Uuid::parse_const(&uuid.to_ascii_uppercase()).unwrap();
             let uuid = Uuid::from_str(&uuid.to_ascii_uppercase()).unwrap();
             println!("Parsed UUID: {}\n", uuid);
             assert_eq!(RAW, uuid.to_bytes(), "Parsed UUID bytes don't match");
+            assert_eq!(
+                RAW,
+                const_uuid.to_bytes(),
+                "Mis-match between const and runtime UUID parsing!"
+            );
         }
     }
 
@@ -1286,5 +1370,12 @@ mod tests {
             assert_eq!(uuid.version(), Version::Random);
             assert_eq!(uuid.variant(), Variant::Rfc4122);
         }
+    }
+
+    #[test]
+    fn uuid_macro() {
+        let uuid = uuid!(UUID_V4);
+        assert_eq!(uuid.version(), Version::Random);
+        assert_eq!(uuid.variant(), Variant::Rfc4122);
     }
 }
