@@ -19,6 +19,7 @@ pub const fn const_range_from(bytes: &[u8], range: RangeFrom<usize>) -> &[u8] {
     )
 }
 
+/// Const version of Range
 pub const fn const_range(bytes: &[u8], range: Range<usize>) -> &[u8] {
     let len = bytes.len();
     let start = range.start;
@@ -26,9 +27,10 @@ pub const fn const_range(bytes: &[u8], range: Range<usize>) -> &[u8] {
 
     if (start > end) || (end > len) {
         // Trigger a standard indexing panic
+        let _ = bytes[start];
         let _ = bytes[end];
-        // or Invalid start idx
-        panic!("Invalid Range start")
+        // if that didn't panic it was in-bounds but wrong
+        panic!("Invalid const Range")
     }
 
     // Safety:
@@ -48,7 +50,8 @@ const fn _const_is_ascii_hex_dash(bytes: &[u8]) -> bool {
     true
 }
 
-pub const fn const_get_unchecked(bytes: &[u8], idx: usize) -> u8 {
+/// Stable const version of slice get_unchecked
+pub const unsafe fn const_get_unchecked(bytes: &[u8], idx: usize) -> u8 {
     // Safety: Internal function, statically known to be used only with valid values
     unsafe { *bytes.as_ptr().add(idx) }
 }
@@ -73,9 +76,9 @@ pub const fn const_hex_decode(bytes: &[u8]) -> Result<[u8; 16], ParseUuidError> 
     let mut i = 0;
     while i < len {
         let b = bytes[i];
-        // Gets rid of a panic check
-        let b2 = const_get_unchecked(bytes, i + 1);
-        // let b2 = bytes[i + 1];
+        // Safety: len is divisible by 2 and increments by 2, there will always be a
+        // next element.
+        let b2 = unsafe { const_get_unchecked(bytes, i + 1) };
 
         let h = match b {
             b'0'..=b'9' => b - b'0',
