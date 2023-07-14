@@ -45,18 +45,38 @@ fn new_v5(c: &mut Criterion) {
 fn from_str(c: &mut Criterion) {
     let mut group = c.benchmark_group("Constructing UUIDs from strings");
     group.throughput(Throughput::Elements(1));
-    let mut buf = [0; 36];
-    // let mut buf = [0; 45];
-    let input = Uuid::new_v4();
-    let input = input.to_str(&mut buf);
-    // let input = input.to_urn(&mut buf);
+    let mut buf1 = [0; 36];
+    let mut buf2 = [0; 45];
+    let mut buf3 = [0; 32];
 
-    group.bench_with_input("Nuuid::from_str(upper hex)", input, |b, i| {
+    let input = Uuid::new_v4();
+    let input_str = input.to_str(&mut buf1);
+    let input_urn = input.to_urn(&mut buf2);
+    let input_sim = input.to_simple(&mut buf3);
+
+    group.bench_with_input("Nuuid::from_str(lower hex, str)", input_str, |b, i| {
         b.iter(|| black_box(Uuid::from_str(black_box(i))))
     });
-    group.bench_with_input("Uuid::from_str(upper hex)", input, |b, i| {
+    group.bench_with_input("Nuuid::from_str(lower hex, urn)", input_urn, |b, i| {
+        b.iter(|| black_box(Uuid::from_str(black_box(i))))
+    });
+    group.bench_with_input("Nuuid::from_str(lower hex, simple)", input_sim, |b, i| {
+        b.iter(|| black_box(Uuid::from_str(black_box(i))))
+    });
+    // group.bench_with_input("Nuuid::from_str(lower hex, braced)", input, |b, i| {
+    //     b.iter(|| black_box(Uuid::from_str(black_box(i))))
+    // });
+
+    group.bench_with_input("Uuid::from_str(lower hex, str)", input_str, |b, i| {
         b.iter(|| black_box(Uuid_::from_str(black_box(i))))
     });
+    group.bench_with_input("Uuid::from_str(lower hex, urn)", input_urn, |b, i| {
+        b.iter(|| black_box(Uuid_::from_str(black_box(i))))
+    });
+    group.bench_with_input("Uuid::from_str(lower hex, simple)", input_sim, |b, i| {
+        b.iter(|| black_box(Uuid_::from_str(black_box(i))))
+    });
+
     group.finish();
 }
 
