@@ -1,9 +1,14 @@
 //! Create and use UUID's
+#![allow(unused_imports, dead_code, unreachable_code)]
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 use core::{
+    cmp::Ordering,
     convert::TryInto,
     fmt,
+    hint::unreachable_unchecked,
+    ops::{Range, RangeFrom},
+    slice::from_raw_parts,
     str::{from_utf8_unchecked_mut, FromStr},
 };
 
@@ -569,6 +574,136 @@ impl Uuid {
 }
 
 impl Uuid {
+    pub const fn parse_const(s: &str) -> Result<Self, ParseUuidError> {
+        const fn const_range_from(bytes: &[u8], range: RangeFrom<usize>) -> &[u8] {
+            const_range(
+                bytes,
+                Range {
+                    start: range.start,
+                    end: bytes.len(),
+                },
+            )
+        }
+
+        const fn const_min(i: usize, o: usize) -> usize {
+            if i < o {
+                i
+            } else {
+                o
+            }
+        }
+
+        const fn const_range(bytes: &[u8], range: Range<usize>) -> &[u8] {
+            let len = bytes.len();
+            let start = range.start;
+            let end = range.end;
+
+            if (start > end) || (end > len) {
+                // Trigger a standard indexing panic
+                let _ = bytes[end];
+                // or Invalid start idx
+                panic!("Invalid Range start")
+            }
+
+            // Safety:
+            // - We check the range is in bounds and then create a sub-slice from it, stable
+            //   and const
+            unsafe { from_raw_parts(bytes.as_ptr().add(start), end - start) }
+        }
+
+        const fn const_is_ascii_hex_dash(bytes: &[u8]) -> bool {
+            let mut i = 0;
+            while i < bytes.len() {
+                if !matches!(bytes[i], b'0'..=b'9' | b'A'..=b'F' | b'a'..=b'f' | b'-') {
+                    return false;
+                }
+                i += 1;
+            }
+            true
+        }
+
+        const fn const_get_unchecked(bytes: &[u8], idx: usize) -> u8 {
+            // Safety: Internal function, statically known to be used only with valid values
+            unsafe { *bytes.as_ptr().add(idx) }
+        }
+
+        const fn const_hex_decode(bytes: &[u8]) -> Result<Bytes, ParseUuidError> {
+            let len = bytes.len();
+
+            // `bytes` length cannot be anything except these two lengths
+            if !(len == UUID_SIMPLE_LENGTH || len == UUID_STR_LENGTH) {
+                // panic!("Should be impossible");
+                // Safety: This is an internal function and this condition is statically known
+                // to be impossible
+                unsafe { unreachable_unchecked() }
+            }
+
+            let mut out = [0u8; 16];
+            let mut i_out = 0;
+
+            let mut i = 0;
+            while i < len {
+                let b = bytes[i];
+                // Gets rid of a panic check
+                let b2 = const_get_unchecked(bytes, i + 1);
+                // let b2 = bytes[i + 1];
+
+                let h = match b {
+                    b'0'..=b'9' => b - b'0',
+                    b'a'..=b'f' => b - b'a' + 10,
+                    b'A'..=b'F' => b - b'A' + 10,
+                    b'-' => {
+                        i += 1;
+                        continue;
+                    }
+                    _ => {
+                        return Err(ParseUuidError::new());
+                    }
+                };
+
+                let l = match b2 {
+                    b'0'..=b'9' => b2 - b'0',
+                    b'a'..=b'f' => b2 - b'a' + 10,
+                    b'A'..=b'F' => b2 - b'A' + 10,
+                    _ => {
+                        return Err(ParseUuidError::new());
+                    }
+                };
+
+                i += 2;
+                if i_out < 16 {
+                    out[i_out] = (h << 4) | l;
+                    i_out += 1;
+                }
+            }
+
+            Ok(out)
+        }
+
+        let bytes = s.as_bytes();
+        let len = bytes.len();
+
+        // All valid UUID formats have unique lengths
+        let bytes = match len {
+            UUID_URN_LENGTH => const_range_from(bytes, UUID_URN_PREFIX..),
+            UUID_BRACED_LENGTH => const_range(bytes, 1..len - 1),
+            UUID_STR_LENGTH => bytes,
+            UUID_SIMPLE_LENGTH => bytes,
+            _ => return Err(ParseUuidError::new()),
+        };
+
+        // Error if input is not ASCII hex, or `-`
+        // if !const_is_ascii_hex_dash(bytes) || len % 2 != 0 {
+        // if len % 2 != 0 {
+        //     return Err(ParseUuidError::new());
+        // }
+
+        match const_hex_decode(bytes) {
+            Ok(d) => Ok(Uuid::from_bytes(d)),
+            Err(e) => Err(e),
+        }
+    }
+
     /// Parse a [`Uuid`] from a string
     ///
     /// This method is case insensitive and supports the following formats:
@@ -595,58 +730,63 @@ impl Uuid {
     /// Uuid::parse("{662AA7C7-7598-4D56-8BCC-A72C30F998A2}").unwrap();
     /// ```
     pub fn parse(s: &str) -> Result<Self, ParseUuidError> {
-        // Error if input is not ASCII
-        if !s.is_ascii() {
-            return Err(ParseUuidError::new());
-        }
-
-        let s = match s.len() {
-            UUID_URN_LENGTH => &s[UUID_URN_PREFIX..],
-            UUID_BRACED_LENGTH => &s[1..s.len() - 1],
-            UUID_STR_LENGTH => s,
-            UUID_SIMPLE_LENGTH => {
-                return Ok(Uuid::from_bytes(
-                    u128::from_str_radix(s, 16)
-                        .map_err(|_| ParseUuidError::new())?
-                        .to_be_bytes(),
-                ));
+        #[allow(clippy::needless_return)]
+        return Self::parse_const(s);
+        #[cfg(no)]
+        {
+            // Error if input is not ASCII
+            if !s.is_ascii() {
+                return Err(ParseUuidError::new());
             }
-            _ => return Err(ParseUuidError::new()),
-        };
-        let s = s.as_bytes();
 
-        let mut raw = [0; UUID_SIMPLE_LENGTH];
-        // "00000000-0000-0000-0000-000000000000"
-        //          9    14   19   24
-        // - 1
-        // "00000000000000000000000000000000"
-        //          9   13  17  21
-        // - 1
+            let s = match s.len() {
+                UUID_URN_LENGTH => &s[UUID_URN_PREFIX..],
+                UUID_BRACED_LENGTH => &s[1..s.len() - 1],
+                UUID_STR_LENGTH => s,
+                UUID_SIMPLE_LENGTH => {
+                    return Ok(Uuid::from_bytes(
+                        u128::from_str_radix(s, 16)
+                            .map_err(|_| ParseUuidError::new())?
+                            .to_be_bytes(),
+                    ));
+                }
+                _ => return Err(ParseUuidError::new()),
+            };
+            let s = s.as_bytes();
 
-        // Copy the UUID to `raw`, but without the hyphens, so we can
-        // decode it in-place.
-        // Benchmarking showed this was much faster than decoding directly
-        // to raw in-between the hyphens.
+            let mut raw = [0; UUID_SIMPLE_LENGTH];
+            // "00000000-0000-0000-0000-000000000000"
+            //          9    14   19   24
+            // - 1
+            // "00000000000000000000000000000000"
+            //          9   13  17  21
+            // - 1
 
-        // Node data
-        raw[20..].copy_from_slice(&s[24..]);
+            // Copy the UUID to `raw`, but without the hyphens, so we can
+            // decode it in-place.
+            // Benchmarking showed this was much faster than decoding directly
+            // to raw in-between the hyphens.
 
-        // High bits of the clock, variant, and low bits of the clock
-        raw[16..20].copy_from_slice(&s[19..23]);
+            // Node data
+            raw[20..].copy_from_slice(&s[24..]);
 
-        // High bits of the timestamp, and version
-        raw[12..16].copy_from_slice(&s[14..18]);
+            // High bits of the clock, variant, and low bits of the clock
+            raw[16..20].copy_from_slice(&s[19..23]);
 
-        // Middle bits of the timestamp
-        raw[8..12].copy_from_slice(&s[9..13]);
+            // High bits of the timestamp, and version
+            raw[12..16].copy_from_slice(&s[14..18]);
 
-        // Low bits of the timestamp
-        raw[..8].copy_from_slice(&s[..8]);
+            // Middle bits of the timestamp
+            raw[8..12].copy_from_slice(&s[9..13]);
 
-        let x = decode_inplace(&mut raw).map_err(|_| ParseUuidError::new())?;
-        Ok(Uuid::from_bytes(
-            x.try_into().map_err(|_| ParseUuidError::new())?,
-        ))
+            // Low bits of the timestamp
+            raw[..8].copy_from_slice(&s[..8]);
+
+            let x = decode_inplace(&mut raw).map_err(|_| ParseUuidError::new())?;
+            Ok(Uuid::from_bytes(
+                x.try_into().map_err(|_| ParseUuidError::new())?,
+            ))
+        }
     }
 
     /// Parse a [`Uuid`] from a string that is in mixed-endian
@@ -1154,9 +1294,9 @@ mod tests {
     fn parse_string() {
         let test = &[UUID_V4, UUID_V4_URN, UUID_V4_BRACED, UUID_V4_SIMPLE];
         for uuid in test {
-            println!("Source UUID: {}", uuid);
+            println!("Source UUID: {} ({} bytes)", uuid, uuid.len());
             let uuid = Uuid::from_str(&uuid.to_ascii_lowercase()).unwrap();
-            println!("Parsed UUID: {}\n", uuid);
+            println!("Parsed UUID: {} ({} bytes)\n", uuid, uuid.0.len());
             assert_eq!(RAW, uuid.to_bytes(), "Parsed UUID bytes don't match");
         }
 
