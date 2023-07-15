@@ -134,10 +134,10 @@ fn mixed_endian(c: &mut Criterion) {
     let mut group = c.benchmark_group("UUIDs mixed-endian performance");
     group.throughput(Throughput::Elements(1));
     let input = Uuid::new_v4();
-    let bytes = input.to_bytes_me();
+    let bytes = input.to_bytes_le();
 
-    group.bench_function("Nuuid::from_bytes_me", |b| {
-        b.iter(|| Uuid::from_bytes_me(bytes));
+    group.bench_function("Nuuid::from_bytes_le", |b| {
+        b.iter(|| Uuid::from_bytes_le(bytes));
     });
 
     group.bench_function("Nuuid::from_bytes", |b| {

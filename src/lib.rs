@@ -417,7 +417,7 @@ impl Uuid {
     ///
     /// Other fields are left unchanged
     #[inline]
-    pub const fn from_bytes_me(bytes: [u8; 16]) -> Self {
+    pub const fn from_bytes_le(bytes: [u8; 16]) -> Self {
         Self(bytes).swap_endian()
     }
 
@@ -425,7 +425,7 @@ impl Uuid {
     ///
     /// See [`Uuid::from_bytes_me`] for details.
     #[inline]
-    pub const fn to_bytes_me(self) -> [u8; 16] {
+    pub const fn to_bytes_le(self) -> [u8; 16] {
         self.swap_endian().to_bytes()
     }
 
@@ -811,7 +811,7 @@ impl Uuid {
     /// correctly.
     ///
     /// See [`Uuid::from_bytes_me`] for details.
-    pub fn parse_me(s: &str) -> Result<Self, ParseUuidError> {
+    pub fn parse_le(s: &str) -> Result<Self, ParseUuidError> {
         Uuid::from_str(s).map(Uuid::swap_endian)
     }
 
@@ -1412,18 +1412,18 @@ mod tests {
         assert_eq!(uuid_be.version(), Version::Random);
         assert_eq!(uuid_be.variant(), Variant::Rfc4122);
 
-        let uuid_le = Uuid::from_bytes_me(uuid_be.to_bytes_me());
+        let uuid_le = Uuid::from_bytes_le(uuid_be.to_bytes_le());
         assert_eq!(uuid_le.version(), Version::Random);
         assert_eq!(uuid_le.variant(), Variant::Rfc4122);
 
         assert_eq!(uuid_le, uuid_be);
-        assert_ne!(uuid_be.to_bytes_me(), uuid_be.to_bytes());
+        assert_ne!(uuid_be.to_bytes_le(), uuid_be.to_bytes());
 
         // Terrible UUID sourced from my partition table on Linux.
         // Either Linux displays them wrong, or parted stores them wrong.
         // Either way, its swapped.
         const UUID: &str = "20169084-b186-884f-b110-3db2c37eb8b5";
-        let uuid = Uuid::parse_me(UUID).unwrap();
+        let uuid = Uuid::parse_le(UUID).unwrap();
         let bad_uuid = Uuid::parse(UUID).unwrap();
 
         assert_ne!(bad_uuid.version(), Version::Random);
