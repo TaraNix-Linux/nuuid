@@ -28,9 +28,6 @@ use sha1::Sha1;
 pub mod defs;
 mod imp;
 
-/// A 16 byte with the UUID.
-pub type Bytes = [u8; 16];
-
 /// A CSPRNG suitable for generating UUID's.
 #[derive(Debug, Clone)]
 pub struct Rng(ChaChaRng);
@@ -258,7 +255,7 @@ impl std::error::Error for ParseUuidError {}
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize), serde(transparent))]
 #[repr(transparent)]
-pub struct Uuid(Bytes);
+pub struct Uuid([u8; 16]);
 
 impl Uuid {
     /// Set the UUID Version.
@@ -395,13 +392,13 @@ impl Uuid {
 
     /// Create a UUID from bytes.
     #[inline]
-    pub const fn from_bytes(bytes: Bytes) -> Self {
+    pub const fn from_bytes(bytes: [u8; 16]) -> Self {
         Self(bytes)
     }
 
     /// Return the UUID as it's bytes.
     #[inline]
-    pub const fn to_bytes(self) -> Bytes {
+    pub const fn to_bytes(self) -> [u8; 16] {
         self.0
     }
 
@@ -420,7 +417,7 @@ impl Uuid {
     ///
     /// Other fields are left unchanged
     #[inline]
-    pub const fn from_bytes_me(bytes: Bytes) -> Self {
+    pub const fn from_bytes_me(bytes: [u8; 16]) -> Self {
         Self(bytes).swap_endian()
     }
 
@@ -428,7 +425,7 @@ impl Uuid {
     ///
     /// See [`Uuid::from_bytes_me`] for details.
     #[inline]
-    pub const fn to_bytes_me(self) -> Bytes {
+    pub const fn to_bytes_me(self) -> [u8; 16] {
         self.swap_endian().to_bytes()
     }
 
@@ -1060,7 +1057,7 @@ impl Uuid {
     #[inline]
     #[cfg(feature = "experimental_uuid")]
     #[cfg_attr(docsrs, doc(cfg(feature = "experimental_uuid")))]
-    pub fn new_v8(bytes: Bytes) -> Self {
+    pub fn new_v8(bytes: [u8; 16]) -> Self {
         let mut uuid = Uuid::from_bytes(bytes);
         uuid.set_variant(Variant::Rfc4122);
         uuid.set_version(Version::Vendor);
