@@ -876,7 +876,7 @@ impl Uuid {
     /// # Example
     ///
     /// ```rust
-    /// # use nuuid::{NAMESPACE_DNS, Uuid};
+    /// # use nuuid::{defs::NAMESPACE_DNS, Uuid};
     /// let uuid = Uuid::new_v3(NAMESPACE_DNS, b"example.com");
     /// ```
     #[inline]
@@ -895,7 +895,7 @@ impl Uuid {
     /// # Example
     ///
     /// ```rust
-    /// # use nuuid::{NAMESPACE_DNS, Uuid};
+    /// # use nuuid::{defs::NAMESPACE_DNS, Uuid};
     /// let uuid = Uuid::new_v5(NAMESPACE_DNS, b"example.com");
     /// ```
     #[inline]
@@ -919,7 +919,7 @@ impl Uuid {
     /// # Example
     ///
     /// ```rust
-    /// # use nuuid::{NAMESPACE_DNS, Uuid};
+    /// # use nuuid::{defs::NAMESPACE_DNS, Uuid};
     /// # let (TIMESTAMP, RANDOM, RANDOM_OR_MAC) = (0, 0, [0; 6]);
     /// let uuid = Uuid::new_v1(TIMESTAMP, RANDOM, RANDOM_OR_MAC);
     /// ```
