@@ -12,9 +12,7 @@ pub(crate) const UUID_URN_PREFIX: usize = UUID_URN.len();
 // TODO: Tests for all namespace UUIDs
 
 /// The predefined DNS namespace, 6ba7b810-9dad-11d1-80b4-00c04fd430c8.
-pub const NAMESPACE_DNS: Uuid = Uuid::from_bytes([
-    107, 167, 184, 16, 157, 173, 17, 209, 128, 180, 0, 192, 79, 212, 48, 200,
-]);
+pub const NAMESPACE_DNS: Uuid = uuid!("6ba7b810-9dad-11d1-80b4-00c04fd430c8");
 
 /// The predefined URL namespace, 6ba7b811-9dad-11d1-80b4-00c04fd430c8.
 pub const NAMESPACE_URL: Uuid = Uuid::from_bytes([
