@@ -35,7 +35,7 @@ fn new_v5(c: &mut Criterion) {
     group.throughput(Throughput::Elements(1));
 
     group.bench_function("Nuuid::new_v5", |b| {
-        b.iter(|| Uuid::new_v5(nuuid::NAMESPACE_DNS, black_box(b"example")))
+        b.iter(|| Uuid::new_v5(nuuid::defs::NAMESPACE_DNS, black_box(b"example")))
     });
     group.bench_function("Uuid::new_v5", |b| {
         b.iter(|| Uuid_::new_v5(&Uuid_::NAMESPACE_DNS, black_box(b"example")))

@@ -1,12 +1,14 @@
 //! Private Implementation Details
 
 use core::{
-    hint::unreachable_unchecked,
     ops::{Range, RangeFrom},
     slice::from_raw_parts,
 };
 
-use crate::{ParseUuidError, UUID_SIMPLE_LENGTH, UUID_STR_LENGTH};
+use crate::{
+    defs::{UUID_SIMPLE_LENGTH, UUID_STR_LENGTH},
+    ParseUuidError,
+};
 
 /// Const version of RangeFrom
 pub const fn const_range_from(bytes: &[u8], range: RangeFrom<usize>) -> &[u8] {

@@ -8,7 +8,7 @@ use core::intrinsics::const_eval_select;
 use core::{
     convert::TryInto,
     fmt,
-    num::{NonZeroU8, NonZeroUsize},
+    num::NonZeroU8,
     str::{from_utf8_unchecked_mut, FromStr},
 };
 
@@ -25,34 +25,8 @@ use rand_chacha::{
 use serde::{Deserialize, Serialize};
 use sha1::Sha1;
 
+pub mod defs;
 mod imp;
-
-const UUID_STR_LENGTH: usize = 36;
-const UUID_URN_LENGTH: usize = 45;
-const UUID_BRACED_LENGTH: usize = 38;
-const UUID_SIMPLE_LENGTH: usize = 32;
-const UUID_URN: &str = "urn:uuid:";
-const UUID_URN_PREFIX: usize = UUID_URN.len();
-
-/// The predefined DNS namespace, 6ba7b810-9dad-11d1-80b4-00c04fd430c8.
-pub const NAMESPACE_DNS: Uuid = Uuid::from_bytes([
-    107, 167, 184, 16, 157, 173, 17, 209, 128, 180, 0, 192, 79, 212, 48, 200,
-]);
-
-/// The predefined URL namespace, 6ba7b811-9dad-11d1-80b4-00c04fd430c8.
-pub const NAMESPACE_URL: Uuid = Uuid::from_bytes([
-    107, 167, 184, 17, 157, 173, 17, 209, 128, 180, 0, 192, 79, 212, 48, 200,
-]);
-
-/// The predefined OID namespace, 6ba7b812-9dad-11d1-80b4-00c04fd430c8.
-pub const NAMESPACE_OID: Uuid = Uuid::from_bytes([
-    107, 167, 184, 18, 157, 173, 17, 209, 128, 180, 0, 192, 79, 212, 48, 200,
-]);
-
-/// The predefined X500 namespace, 6ba7b814-9dad-11d1-80b4-00c04fd430c8.
-pub const NAMESPACE_X500: Uuid = Uuid::from_bytes([
-    107, 167, 184, 20, 157, 173, 17, 209, 128, 180, 0, 192, 79, 212, 48, 200,
-]);
 
 /// A 16 byte with the UUID.
 pub type Bytes = [u8; 16];
@@ -188,6 +162,7 @@ enum ErrorInfo {
     // Use NonZeroU8 to optimize error size
     // 0 is always a valid hex digit byte, so can never be a legitimate value and is free as a
     // niche.
+    #[allow(dead_code)]
     InvalidByte {
         index: usize,
         byte: NonZeroU8,
@@ -213,7 +188,7 @@ impl ParseUuidError {
         }
     }
 
-    const fn info(idx: usize, b: u8) -> Self {
+    const fn _info(idx: usize, b: u8) -> Self {
         assert!(b != 0, "ParseUuidError::info was passed zero");
         Self {
             info: ErrorInfo::InvalidByte {
@@ -341,10 +316,10 @@ impl Uuid {
     /// Optimized for runtime
     fn parse_imp(s: &str) -> Result<Uuid, ParseUuidError> {
         let s = match s.len() {
-            UUID_URN_LENGTH => &s[UUID_URN_PREFIX..],
-            UUID_BRACED_LENGTH => &s[1..s.len() - 1],
-            UUID_STR_LENGTH => s,
-            UUID_SIMPLE_LENGTH => {
+            defs::UUID_URN_LENGTH => &s[defs::UUID_URN_PREFIX..],
+            defs::UUID_BRACED_LENGTH => &s[1..s.len() - 1],
+            defs::UUID_STR_LENGTH => s,
+            defs::UUID_SIMPLE_LENGTH => {
                 // Simple can be decoded all in one go directly, much faster
                 //
                 // Loses, or more accurately prevents gaining, the ability to report the invalid
@@ -369,7 +344,7 @@ impl Uuid {
 
         // The UUID display formats are basically either "yes dashes" or "no dashes",
         // other aspects don't matter.
-        let mut raw = [0; UUID_SIMPLE_LENGTH];
+        let mut raw = [0; defs::UUID_SIMPLE_LENGTH];
         // "00000000-0000-0000-0000-000000000000"
         //          9    14   19   24
         // - 1
@@ -686,8 +661,8 @@ impl Uuid {
     /// For usage examples see [`Uuid::to_str`].
     #[inline]
     pub fn to_urn(self, buf: &mut [u8; 45]) -> &mut str {
-        buf[..UUID_URN_PREFIX].copy_from_slice(UUID_URN.as_bytes());
-        self.to_str((&mut buf[UUID_URN_PREFIX..]).try_into().unwrap());
+        buf[..defs::UUID_URN_PREFIX].copy_from_slice(defs::UUID_URN.as_bytes());
+        self.to_str((&mut buf[defs::UUID_URN_PREFIX..]).try_into().unwrap());
         core::str::from_utf8_mut(buf).expect("BUG: Invalid UTF8")
     }
 
@@ -712,7 +687,7 @@ impl Uuid {
     #[inline]
     pub fn to_urn_upper(self, buf: &mut [u8; 45]) -> &mut str {
         let s = self.to_urn(buf);
-        s[UUID_URN_PREFIX..].make_ascii_uppercase();
+        s[defs::UUID_URN_PREFIX..].make_ascii_uppercase();
         s
     }
 
@@ -736,10 +711,10 @@ impl Uuid {
         // All valid UUID formats have unique lengths
         // The characters we care about are only the 32 hex digits
         let bytes = match len {
-            UUID_URN_LENGTH => const_range_from(bytes, UUID_URN_PREFIX..),
-            UUID_BRACED_LENGTH => const_range(bytes, 1..len - 1),
-            UUID_STR_LENGTH => bytes,
-            UUID_SIMPLE_LENGTH => bytes,
+            defs::UUID_URN_LENGTH => const_range_from(bytes, defs::UUID_URN_PREFIX..),
+            defs::UUID_BRACED_LENGTH => const_range(bytes, 1..len - 1),
+            defs::UUID_STR_LENGTH => bytes,
+            defs::UUID_SIMPLE_LENGTH => bytes,
             _ => return Err(ParseUuidError::new()),
         };
 
@@ -1170,7 +1145,7 @@ impl fmt::Debug for Uuid {
 impl fmt::LowerHex for Uuid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if f.alternate() {
-            write!(f, "{}", UUID_URN)?;
+            write!(f, "{}", defs::UUID_URN)?;
         }
         let mut buf = [0; 36];
         let s = self.to_str(&mut buf);
@@ -1193,7 +1168,7 @@ impl fmt::LowerHex for Uuid {
 impl fmt::UpperHex for Uuid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if f.alternate() {
-            write!(f, "{}", UUID_URN)?;
+            write!(f, "{}", defs::UUID_URN)?;
         }
         let mut buf = [0; 36];
         write!(f, "{}", self.to_str_upper(&mut buf))
@@ -1249,6 +1224,7 @@ macro_rules! uuid {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::defs::NAMESPACE_DNS;
 
     const UUID_NIL: &str = "00000000-0000-0000-0000-000000000000";
     const UUID_V4: &str = "662aa7c7-7598-4d56-8bcc-a72c30f998a2";
@@ -1256,9 +1232,9 @@ mod tests {
     const UUID_V4_BRACED: &str = "{662aa7c7-7598-4d56-8bcc-a72c30f998a2}";
     const UUID_V4_URN: &str = "urn:uuid:662aa7c7-7598-4d56-8bcc-a72c30f998a2";
     const UUID_V4_URN_UPPER: &str = "urn:uuid:662AA7C7-7598-4D56-8BCC-A72C30F998A2";
-    const UUID_V4_INVALID_LONG: &str = "662aa7c7-7598-4d56-8bcc-a72c30f998a20000";
-    const UUID_V4_INVALID_SHORT: &str = "662aa7c7-7598-4d56-8bcc-a72c30f99a";
-    const UUID_V4_INVALID_CHAR: &str = "662aa7c7-7598-4d56-8bcc-a72c30f99@2";
+    const _UUID_V4_INVALID_LONG: &str = "662aa7c7-7598-4d56-8bcc-a72c30f998a20000";
+    const _UUID_V4_INVALID_SHORT: &str = "662aa7c7-7598-4d56-8bcc-a72c30f99a";
+    const _UUID_V4_INVALID_CHAR: &str = "662aa7c7-7598-4d56-8bcc-a72c30f99@2";
     const RAW: [u8; 16] = [
         102, 42, 167, 199, 117, 152, 77, 86, 139, 204, 167, 44, 48, 249, 152, 162,
     ];
