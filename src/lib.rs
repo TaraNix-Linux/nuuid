@@ -232,7 +232,9 @@ impl fmt::Display for ParseUuidError {
                 )
             }
 
-            ErrorInfo::Len(l) => write!(f, "error parsing uuid, unexpectedly found {l} bytes"),
+            ErrorInfo::Len(l) => {
+                write!(f, "error parsing uuid, string of length {l} is invalid")
+            }
 
             ErrorInfo::None => write!(f, "error parsing uuid"),
         }
@@ -287,7 +289,7 @@ impl Uuid {
         }
     }
 
-    /// Swap the in-memory format between big-endian and mixed-endian.
+    /// Swap the in-memory format between big-endian and little-endian.
     #[inline]
     const fn swap_endian(mut self) -> Self {
         // TODO: Const slice reverse pls. or const mem::swap.
@@ -402,7 +404,7 @@ impl Uuid {
         self.0
     }
 
-    /// Create a UUID from mixed-endian bytes.
+    /// Create a UUID from little-endian bytes.
     ///
     /// The resulting UUID will be stored in-memory as big-endian.
     ///
@@ -421,7 +423,7 @@ impl Uuid {
         Self(bytes).swap_endian()
     }
 
-    /// Return the UUID as mixed-endian bytes.
+    /// Return the UUID as little-endian bytes.
     ///
     /// See [`Uuid::from_bytes_me`] for details.
     #[inline]
@@ -721,6 +723,16 @@ impl Uuid {
         }
     }
 
+    /// Parse a [`Uuid`] from a string that is in little-endian
+    ///
+    /// These are primarily encountered with Microsoft / COM / GUIDs
+    pub const fn parse_const_le(s: &str) -> Result<Self, ParseUuidError> {
+        match Uuid::parse_const(s) {
+            Ok(u) => Ok(u.swap_endian()),
+            Err(e) => Err(e),
+        }
+    }
+
     /// Parse a [`Uuid`] from a string
     ///
     /// This method is case insensitive and supports the following formats:
@@ -802,15 +814,9 @@ impl Uuid {
         Self::parse_imp(s)
     }
 
-    /// Parse a [`Uuid`] from a string that is in mixed-endian
+    /// Parse a [`Uuid`] from a string that is in little-endian
     ///
-    /// This method is bad and should never be needed, but there are UUIDs in
-    /// the wild that do this.
-    ///
-    /// These UUIDs are being displayed wrong, but you still need to parse them
-    /// correctly.
-    ///
-    /// See [`Uuid::from_bytes_me`] for details.
+    /// These are primarily encountered with Microsoft / COM / GUIDs
     pub fn parse_le(s: &str) -> Result<Self, ParseUuidError> {
         Uuid::from_str(s).map(Uuid::swap_endian)
     }
