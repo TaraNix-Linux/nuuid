@@ -1,0 +1,38 @@
+[package]
+name = "nuuid"
+version = "0.7.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "A new, no_std, UUID Library"
+repository = "https://github.com/TaraNix-Linux/nuuid"
+documentation = "https://docs.rs/nuuid"
+readme = "README.md"
+keywords = ["uuid", "guid"]
+categories = ["no-std", "parser-implementations"]
+publish = false
+
+[dependencies]
+
+[dev-dependencies]
+
+[features]
+default = [
+    #
+]
+
+[package.metadata.docs.rs]
+# all-features = true
+# default-target = "aarch64-unknown-none"
+rustdoc-args = ["--cfg", "docsrs"]
+features = [
+    #
+]
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = [
+    #
+    'cfg(kani)',
+    'cfg(no)',
+    'cfg(docsrs)',
+]
