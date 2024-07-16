@@ -11,14 +11,15 @@ A `no_std` library to create and use UUID's in pure Rust.
 
 ## Specifications
 
-This library follows [RFC 4122], with the following errata taken note of
-
-- [Errata 5560][eid5560]
-  - We choose to not touch don't-care bits
-
-This library also supports [RFC 9562], a "PROPOSED STANDARD" which obsoletes [RFC 4122], and newly provides UUID v6, v7, and v8, with the following errata:
+This library follows [RFC 9562] (formerly: [RFC 4122]), with the following errata taken note of
 
 - N/A
+
+### Why RFC 9562?
+
+Despite its current at time of writing status as a "proposed standard", other standards bodies are also adopting it as the canonical reference for what a "UUID" is.
+It is compatible with the old [RFC 4122], but with clearer text and more versions defined.
+As such, as such we also treat it as the canonical reference.
 
 ## Features / Design Goals
 
@@ -64,4 +65,3 @@ at your option.
 
 [RFC 4122]: https://www.rfc-editor.org/rfc/rfc4122
 [RFC 9562]: https://www.rfc-editor.org/info/rfc9562
-[eid5560]: https://www.rfc-editor.org/errata/eid5560
