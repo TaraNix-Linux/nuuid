@@ -13,13 +13,14 @@ mod _priv {
 }
 use _priv::*;
 
-/// Represents any recognized Version for a RFC Variant UUID
+/// Represents any recognized Version for a
+/// [`Variant::Rfc`][crate::Variant::Rfc] UUID
 pub trait IsRfcUuid: RfcSeal {}
 
 /// Proper implementations should be done on [`RfcSeal`]
 impl<T: RfcSeal> IsRfcUuid for T {}
 
-/// A Version 4 UUID
+/// A [`Version::Random`][crate::Version::Random] UUID
 #[derive(Default, Clone, Copy)]
 pub struct RfcV4 {
     _priv: PhantomData<()>,
