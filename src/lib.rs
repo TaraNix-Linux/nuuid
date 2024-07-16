@@ -11,4 +11,5 @@
 #![allow(clippy::identity_op)]
 
 pub mod error;
+pub mod state;
 
